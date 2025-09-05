@@ -65,6 +65,8 @@ module "ecs" {
   red_ecr_url                = module.ecr.red_repository_url
   secrets_arn                = module.secrets.secret_arn
   kms_key_arn                = module.rds.kms_key_arn
+  green_ecr_build_complete   = module.ecr.green_build_complete
+  red_ecr_build_complete     = module.ecr.red_build_complete
 
   depends_on = [module.vpc_endpoints]
 }
@@ -92,8 +94,6 @@ module "monitoring" {
 # S3 버킷 모듈
 module "s3" {
   source = "./modules/s3"
-
-  account_number = var.account_number
 }
 
 # CodeDeploy 모듈

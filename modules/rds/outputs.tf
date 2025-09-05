@@ -20,7 +20,7 @@ output "master_username" {
 }
 
 output "master_password" {
-  value     = random_password.db_password.result
+  value     = "Skill53##"
   sensitive = true
 }
 

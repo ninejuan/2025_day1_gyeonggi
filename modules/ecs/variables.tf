@@ -37,3 +37,15 @@ variable "kms_key_arn" {
   description = "KMS key ARN"
   type        = string
 }
+
+variable "green_ecr_build_complete" {
+  description = "Dependency to ensure Green ECR build is complete"
+  type        = any
+  default     = null
+}
+
+variable "red_ecr_build_complete" {
+  description = "Dependency to ensure Red ECR build is complete"
+  type        = any
+  default     = null
+}

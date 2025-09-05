@@ -1,0 +1,76 @@
+{
+  "family": "ws25-ecs-green-taskdef",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "1024",
+  "memory": "1024",
+  "executionRoleArn": "<EXECUTION_ROLE_ARN>",
+  "taskRoleArn": "<TASK_ROLE_ARN>",
+  "containerDefinitions": [
+    {
+      "name": "green",
+      "image": "<IMAGE_URI>",
+      "cpu": 1024,
+      "memory": 1024,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_HOST",
+          "valueFrom": "<SECRET_ARN>:DB_HOST::"
+        },
+        {
+          "name": "DB_PORT", 
+          "valueFrom": "<SECRET_ARN>:DB_PORT::"
+        },
+        {
+          "name": "DB_NAME",
+          "valueFrom": "<SECRET_ARN>:DB_NAME::"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "<SECRET_ARN>:DB_USERNAME::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "<SECRET_ARN>:DB_PASSWORD::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awsfirelens"
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    },
+    {
+      "name": "log_router",
+      "image": "<FLUENTBIT_IMAGE_URI>",
+      "essential": true,
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "config-file-type": "file",
+          "config-file-value": "/fluent-bit/configs/parse-json.conf"
+        }
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ws25/logs/fluentbit",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "firelens"
+        }
+      }
+    }
+  ]
+}

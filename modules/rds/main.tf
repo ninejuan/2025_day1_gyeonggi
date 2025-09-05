@@ -76,17 +76,12 @@ resource "aws_db_parameter_group" "main" {
   }
 }
 
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
-
 resource "aws_rds_cluster" "main" {
   cluster_identifier              = "ws25-rdb-cluster"
   engine                          = "aurora-mysql"
   engine_version                  = "8.0.mysql_aurora.3.04.1"
   master_username                 = "admin"
-  master_password                 = random_password.db_password.result
+  master_password                 = "Skill53##"
   database_name                   = "day1"
   port                            = 10101
   db_subnet_group_name            = aws_db_subnet_group.main.name
@@ -180,4 +175,34 @@ resource "aws_iam_role" "rds_monitoring" {
 resource "aws_iam_role_policy_attachment" "rds_monitoring" {
   role       = aws_iam_role.rds_monitoring.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+
+resource "null_resource" "db_init" {
+  depends_on = [aws_rds_cluster_instance.writer]
+
+  provisioner "local-exec" {
+    command = <<-EOF
+      # Wait for RDS to be fully available
+      sleep 60
+      
+      # Install mysql client if not available
+      if ! command -v mysql &> /dev/null; then
+        echo "Installing mysql client..."
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          brew install mysql-client || true
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          sudo yum install -y mysql || sudo apt-get install -y mysql-client || true
+        fi
+      fi
+      
+      # Execute SQL file
+      mysql -h ${aws_rds_cluster.main.endpoint} -P 10101 -u admin -p'Skill53##' < ${path.module}/../../app-files/database/day1_table_v1.sql
+      
+      echo "Database initialization completed"
+    EOF
+  }
+
+  triggers = {
+    cluster_endpoint = aws_rds_cluster.main.endpoint
+  }
 }

@@ -47,10 +47,10 @@ output "hub_nlb_dns_name" {
 # Pipeline 관련 출력
 output "green_s3_bucket_name" {
   description = "Green 애플리케이션 아티팩트 S3 버킷 이름"
-  value       = module.s3.green_artifact_bucket_name
+  value       = module.s3.green_artifact_bucket
 }
 
 output "red_s3_bucket_name" {
   description = "Red 애플리케이션 아티팩트 S3 버킷 이름"
-  value       = module.s3.red_artifact_bucket_name
+  value       = module.s3.red_artifact_bucket
 }

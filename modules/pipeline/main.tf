@@ -142,7 +142,7 @@ resource "aws_codepipeline" "green" {
         TaskDefinitionTemplateArtifact = "source_output"
         TaskDefinitionTemplatePath     = "taskdef.json"
         AppSpecTemplateArtifact        = "source_output"
-        AppSpecTemplatePath            = "appspec.yaml"
+        AppSpecTemplatePath            = "appspec.yml"
       }
     }
   }
@@ -192,7 +192,7 @@ resource "aws_codepipeline" "red" {
         TaskDefinitionTemplateArtifact = "source_output"
         TaskDefinitionTemplatePath     = "taskdef.json"
         AppSpecTemplateArtifact        = "source_output"
-        AppSpecTemplatePath            = "appspec.yaml"
+        AppSpecTemplatePath            = "appspec.yml"
       }
     }
   }

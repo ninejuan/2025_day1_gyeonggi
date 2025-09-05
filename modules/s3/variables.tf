@@ -1,4 +1,1 @@
-variable "account_number" {
-  description = "AWS account number"
-  type        = string
-}
+# No variables needed for S3 module

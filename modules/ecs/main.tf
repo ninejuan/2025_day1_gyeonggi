@@ -364,7 +364,10 @@ resource "aws_ecs_service" "green" {
     container_port   = 8080
   }
 
-  depends_on = [aws_iam_role_policy_attachment.ecs_task_execution]
+  depends_on = [
+    aws_iam_role_policy_attachment.ecs_task_execution,
+    var.green_ecr_build_complete
+  ]
 }
 
 resource "aws_ecs_service" "red" {
@@ -391,7 +394,10 @@ resource "aws_ecs_service" "red" {
     container_port   = 8080
   }
 
-  depends_on = [aws_iam_role_policy_attachment.ecs_task_execution]
+  depends_on = [
+    aws_iam_role_policy_attachment.ecs_task_execution,
+    var.red_ecr_build_complete
+  ]
 }
 
 resource "aws_launch_template" "ecs_ec2" {

@@ -75,7 +75,7 @@ resource "aws_iam_instance_profile" "bastion" {
 }
 
 locals {
-  user_data = templatefile("${path.module}/../../scripts/bastion-userdata.sh", {})
+  user_data = templatefile("${path.module}/userdata.sh", {})
 }
 
 # Bastion EC2 Instance
