@@ -1,4 +1,3 @@
-# Hub VPC - Network Load Balancer (Internet-facing)
 resource "aws_lb" "hub_nlb" {
   name               = "ws25-hub-nlb"
   internal           = false
@@ -13,7 +12,6 @@ resource "aws_lb" "hub_nlb" {
   }
 }
 
-# Hub NLB Target Group (IP Type)
 resource "aws_lb_target_group" "hub_nlb" {
   name        = "ws25-hub-nlb-tg"
   port        = 80
@@ -34,7 +32,6 @@ resource "aws_lb_target_group" "hub_nlb" {
   }
 }
 
-# Hub NLB Listener
 resource "aws_lb_listener" "hub_nlb" {
   load_balancer_arn = aws_lb.hub_nlb.arn
   port              = 80
@@ -46,7 +43,6 @@ resource "aws_lb_listener" "hub_nlb" {
   }
 }
 
-# App VPC - Network Load Balancer (Internal)
 resource "aws_lb" "app_nlb" {
   name               = "ws25-app-nlb"
   internal           = true
@@ -61,7 +57,6 @@ resource "aws_lb" "app_nlb" {
   }
 }
 
-# App NLB Target Group (ALB Type)
 resource "aws_lb_target_group" "app_nlb" {
   name        = "ws25-app-nlb-tg"
   port        = 80
@@ -83,7 +78,6 @@ resource "aws_lb_target_group" "app_nlb" {
   }
 }
 
-# App NLB Listener
 resource "aws_lb_listener" "app_nlb" {
   load_balancer_arn = aws_lb.app_nlb.arn
   port              = 80
@@ -95,7 +89,6 @@ resource "aws_lb_listener" "app_nlb" {
   }
 }
 
-# App VPC - Application Load Balancer (Internal)
 resource "aws_lb" "app_alb" {
   name               = "ws25-app-alb"
   internal           = true
@@ -110,7 +103,6 @@ resource "aws_lb" "app_alb" {
   }
 }
 
-# ALB Security Group
 resource "aws_security_group" "app_alb" {
   name        = "ws25-app-alb-sg"
   description = "Security group for Application Load Balancer"
@@ -135,7 +127,6 @@ resource "aws_security_group" "app_alb" {
   }
 }
 
-# ALB Target Group for Green
 resource "aws_lb_target_group" "green" {
   name        = "ws25-alb-green-tg"
   port        = 8080
@@ -160,7 +151,6 @@ resource "aws_lb_target_group" "green" {
   }
 }
 
-# ALB Target Group for Red
 resource "aws_lb_target_group" "red" {
   name        = "ws25-alb-red-tg"
   port        = 8080
@@ -185,13 +175,11 @@ resource "aws_lb_target_group" "red" {
   }
 }
 
-# ALB Listener
 resource "aws_lb_listener" "app_alb" {
   load_balancer_arn = aws_lb.app_alb.arn
   port              = 80
   protocol          = "HTTP"
 
-  # 기본 동작 - 404 반환
   default_action {
     type = "fixed-response"
 
@@ -203,7 +191,6 @@ resource "aws_lb_listener" "app_alb" {
   }
 }
 
-# ALB Listener Rules - Green path
 resource "aws_lb_listener_rule" "green" {
   listener_arn = aws_lb_listener.app_alb.arn
   priority     = 100
@@ -220,7 +207,6 @@ resource "aws_lb_listener_rule" "green" {
   }
 }
 
-# ALB Listener Rules - Red path
 resource "aws_lb_listener_rule" "red" {
   listener_arn = aws_lb_listener.app_alb.arn
   priority     = 200
@@ -237,7 +223,6 @@ resource "aws_lb_listener_rule" "red" {
   }
 }
 
-# ALB Listener Rules - Error path
 resource "aws_lb_listener_rule" "error" {
   listener_arn = aws_lb_listener.app_alb.arn
   priority     = 300
@@ -265,7 +250,6 @@ resource "aws_lb_listener_rule" "error" {
   }
 }
 
-# ALB Listener Rules - Health check
 resource "aws_lb_listener_rule" "health" {
   listener_arn = aws_lb_listener.app_alb.arn
   priority     = 50
@@ -287,32 +271,9 @@ resource "aws_lb_listener_rule" "health" {
   }
 }
 
-# Register ALB with App NLB Target Group
 resource "aws_lb_target_group_attachment" "alb_to_nlb" {
   target_group_arn = aws_lb_target_group.app_nlb.arn
   target_id        = aws_lb.app_alb.id
   port             = 80
 }
 
-# Get App NLB Network Interface IPs for Hub NLB targeting
-data "aws_network_interfaces" "app_nlb" {
-  filter {
-    name   = "description"
-    values = ["ELB ${aws_lb.app_nlb.arn_suffix}"]
-  }
-}
-
-data "aws_network_interface" "app_nlb" {
-  for_each = toset(data.aws_network_interfaces.app_nlb.ids)
-  id       = each.value
-}
-
-# Register App NLB IPs with Hub NLB Target Group
-resource "aws_lb_target_group_attachment" "nlb_to_nlb" {
-  for_each = data.aws_network_interface.app_nlb
-
-  target_group_arn  = aws_lb_target_group.hub_nlb.arn
-  target_id         = each.value.private_ip
-  port              = 80
-  availability_zone = "all"
-}

@@ -1,4 +1,3 @@
-# Secrets Manager Secret
 resource "aws_secretsmanager_secret" "app_secret" {
   name                    = "ws25/secret/key"
   description             = "Database connection information for applications"
@@ -10,7 +9,6 @@ resource "aws_secretsmanager_secret" "app_secret" {
   }
 }
 
-# Secret Version
 resource "aws_secretsmanager_secret_version" "app_secret" {
   secret_id = aws_secretsmanager_secret.app_secret.id
 

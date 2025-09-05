@@ -1,4 +1,3 @@
-# S3 Bucket for Green Artifacts
 resource "aws_s3_bucket" "green_artifacts" {
   bucket = "ws25-cd-green-artifact-${var.account_number}"
 
@@ -7,7 +6,6 @@ resource "aws_s3_bucket" "green_artifacts" {
   }
 }
 
-# S3 Bucket for Red Artifacts
 resource "aws_s3_bucket" "red_artifacts" {
   bucket = "ws25-cd-red-artifact-${var.account_number}"
 
@@ -16,7 +14,6 @@ resource "aws_s3_bucket" "red_artifacts" {
   }
 }
 
-# S3 Bucket Versioning
 resource "aws_s3_bucket_versioning" "green_artifacts" {
   bucket = aws_s3_bucket.green_artifacts.id
   versioning_configuration {
@@ -31,7 +28,6 @@ resource "aws_s3_bucket_versioning" "red_artifacts" {
   }
 }
 
-# S3 Bucket Server Side Encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "green_artifacts" {
   bucket = aws_s3_bucket.green_artifacts.id
 
@@ -52,7 +48,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "red_artifacts" {
   }
 }
 
-# Block Public Access
 resource "aws_s3_bucket_public_access_block" "green_artifacts" {
   bucket = aws_s3_bucket.green_artifacts.id
 
@@ -71,7 +66,6 @@ resource "aws_s3_bucket_public_access_block" "red_artifacts" {
   restrict_public_buckets = true
 }
 
-# S3 Bucket Policy for CodePipeline
 data "aws_iam_policy_document" "s3_pipeline_policy" {
   statement {
     sid    = "DenyInsecureConnections"

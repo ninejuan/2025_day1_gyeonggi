@@ -1,4 +1,3 @@
-# Hub VPC
 resource "aws_vpc" "hub" {
   cidr_block           = "172.28.0.0/16"
   enable_dns_hostnames = true
@@ -9,7 +8,6 @@ resource "aws_vpc" "hub" {
   }
 }
 
-# Application VPC
 resource "aws_vpc" "app" {
   cidr_block           = "10.200.0.0/16"
   enable_dns_hostnames = true
@@ -20,7 +18,6 @@ resource "aws_vpc" "app" {
   }
 }
 
-# Hub VPC Subnets
 resource "aws_subnet" "hub_public_a" {
   vpc_id                  = aws_vpc.hub.id
   cidr_block              = "172.28.0.0/20"
@@ -43,7 +40,6 @@ resource "aws_subnet" "hub_public_c" {
   }
 }
 
-# App VPC Public Subnets
 resource "aws_subnet" "app_public_a" {
   vpc_id                  = aws_vpc.app.id
   cidr_block              = "10.200.10.0/24"
@@ -77,7 +73,6 @@ resource "aws_subnet" "app_public_c" {
   }
 }
 
-# App VPC Private Subnets
 resource "aws_subnet" "app_private_a" {
   vpc_id            = aws_vpc.app.id
   cidr_block        = "10.200.20.0/24"
@@ -108,7 +103,6 @@ resource "aws_subnet" "app_private_c" {
   }
 }
 
-# App VPC DB Subnets
 resource "aws_subnet" "app_db_a" {
   vpc_id            = aws_vpc.app.id
   cidr_block        = "10.200.30.0/24"
@@ -129,7 +123,6 @@ resource "aws_subnet" "app_db_c" {
   }
 }
 
-# Internet Gateways
 resource "aws_internet_gateway" "hub" {
   vpc_id = aws_vpc.hub.id
 
@@ -146,7 +139,6 @@ resource "aws_internet_gateway" "app" {
   }
 }
 
-# Elastic IPs for NAT Gateways
 resource "aws_eip" "nat_a" {
   domain = "vpc"
 
@@ -163,7 +155,6 @@ resource "aws_eip" "nat_c" {
   }
 }
 
-# NAT Gateways
 resource "aws_nat_gateway" "app_a" {
   allocation_id = aws_eip.nat_a.id
   subnet_id     = aws_subnet.app_public_a.id
@@ -186,7 +177,6 @@ resource "aws_nat_gateway" "app_c" {
   depends_on = [aws_internet_gateway.app]
 }
 
-# Route Tables
 resource "aws_route_table" "hub_public" {
   vpc_id = aws_vpc.hub.id
 
@@ -268,7 +258,6 @@ resource "aws_route_table" "app_db_c" {
   }
 }
 
-# Route Table Associations
 resource "aws_route_table_association" "hub_public_a" {
   subnet_id      = aws_subnet.hub_public_a.id
   route_table_id = aws_route_table.hub_public.id
@@ -319,7 +308,6 @@ resource "aws_route_table_association" "app_db_c" {
   route_table_id = aws_route_table.app_db_c.id
 }
 
-# VPC Peering Connection
 resource "aws_vpc_peering_connection" "hub_app" {
   peer_vpc_id = aws_vpc.app.id
   vpc_id      = aws_vpc.hub.id
@@ -330,7 +318,6 @@ resource "aws_vpc_peering_connection" "hub_app" {
   }
 }
 
-# VPC Peering Routes
 resource "aws_route" "hub_to_app" {
   route_table_id            = aws_route_table.hub_public.id
   destination_cidr_block    = aws_vpc.app.cidr_block
@@ -373,7 +360,6 @@ resource "aws_route" "app_db_c_to_hub" {
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
 }
 
-# VPC Flow Logs
 resource "aws_cloudwatch_log_group" "hub_flow_logs" {
   name              = "/ws25/flow/hub"
   retention_in_days = 7
@@ -437,7 +423,6 @@ resource "aws_flow_log" "app" {
   vpc_id          = aws_vpc.app.id
 }
 
-# VPC Endpoint용 Security Group
 resource "aws_security_group" "vpc_endpoints" {
   name        = "ws25-vpc-endpoints-sg"
   description = "Security group for VPC endpoints"

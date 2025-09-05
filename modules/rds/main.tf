@@ -1,4 +1,3 @@
-# KMS Key for RDS Encryption
 resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
   deletion_window_in_days = 10
@@ -15,7 +14,6 @@ resource "aws_kms_alias" "rds" {
   target_key_id = aws_kms_key.rds.key_id
 }
 
-# DB Subnet Group
 resource "aws_db_subnet_group" "main" {
   name       = "ws25-db-subnet-group"
   subnet_ids = var.db_subnet_ids
@@ -25,7 +23,6 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# Security Group for RDS
 resource "aws_security_group" "rds" {
   name        = "ws25-rds-sg"
   description = "Security group for RDS Aurora"
@@ -51,7 +48,6 @@ resource "aws_security_group" "rds" {
   }
 }
 
-# RDS Cluster Parameter Group
 resource "aws_rds_cluster_parameter_group" "main" {
   family = "aurora-mysql8.0"
   name   = "ws25-aurora-cluster-pg"
@@ -71,7 +67,6 @@ resource "aws_rds_cluster_parameter_group" "main" {
   }
 }
 
-# DB Parameter Group
 resource "aws_db_parameter_group" "main" {
   family = "aurora-mysql8.0"
   name   = "ws25-aurora-db-pg"
@@ -81,13 +76,11 @@ resource "aws_db_parameter_group" "main" {
   }
 }
 
-# Random password for RDS
 resource "random_password" "db_password" {
   length  = 16
   special = true
 }
 
-# RDS Aurora Cluster
 resource "aws_rds_cluster" "main" {
   cluster_identifier              = "ws25-rdb-cluster"
   engine                          = "aurora-mysql"
@@ -125,7 +118,6 @@ resource "aws_rds_cluster" "main" {
   }
 }
 
-# RDS Aurora Instance 1 (Writer)
 resource "aws_rds_cluster_instance" "writer" {
   identifier              = "ws25-rdb-instance-1"
   cluster_identifier      = aws_rds_cluster.main.id
@@ -147,7 +139,6 @@ resource "aws_rds_cluster_instance" "writer" {
   }
 }
 
-# RDS Aurora Instance 2 (Reader)
 resource "aws_rds_cluster_instance" "reader" {
   identifier              = "ws25-rdb-instance-2"
   cluster_identifier      = aws_rds_cluster.main.id
@@ -169,7 +160,6 @@ resource "aws_rds_cluster_instance" "reader" {
   }
 }
 
-# IAM Role for Enhanced Monitoring
 resource "aws_iam_role" "rds_monitoring" {
   name = "ws25-rds-monitoring-role"
 

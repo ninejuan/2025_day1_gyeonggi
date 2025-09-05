@@ -1,4 +1,3 @@
-# ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "ws25-ecs-cluster"
 
@@ -19,7 +18,6 @@ resource "aws_ecs_cluster" "main" {
   }
 }
 
-# ECS Cluster Capacity Providers
 resource "aws_ecs_cluster_capacity_providers" "main" {
   cluster_name = aws_ecs_cluster.main.name
 
@@ -32,7 +30,6 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
   }
 }
 
-# IAM Role for ECS Task Execution
 resource "aws_iam_role" "ecs_task_execution" {
   name = "ws25-ecs-task-execution-role"
 
@@ -55,7 +52,6 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Additional policy for Secrets Manager access
 resource "aws_iam_role_policy" "ecs_secrets_policy" {
   name = "ecs-secrets-policy"
   role = aws_iam_role.ecs_task_execution.id
@@ -85,7 +81,6 @@ resource "aws_iam_role_policy" "ecs_secrets_policy" {
   })
 }
 
-# IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task" {
   name = "ws25-ecs-task-role"
 
@@ -103,7 +98,6 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
-# Security Group for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
   name        = "ws25-ecs-tasks-sg"
   description = "Security group for ECS tasks"
@@ -128,7 +122,6 @@ resource "aws_security_group" "ecs_tasks" {
   }
 }
 
-# Data source for ALB security group
 data "aws_security_group" "alb" {
   filter {
     name   = "tag:Name"
@@ -138,7 +131,6 @@ data "aws_security_group" "alb" {
   vpc_id = var.vpc_id
 }
 
-# CloudWatch Log Groups
 resource "aws_cloudwatch_log_group" "green" {
   name              = "/ws25/logs/green"
   retention_in_days = 7
@@ -154,7 +146,6 @@ resource "aws_cloudwatch_log_group" "fluentbit" {
   retention_in_days = 7
 }
 
-# Green Task Definition
 resource "aws_ecs_task_definition" "green" {
   family                   = "ws25-ecs-green-taskdef"
   network_mode             = "awsvpc"
@@ -254,7 +245,6 @@ resource "aws_ecs_task_definition" "green" {
   }
 }
 
-# Red Task Definition
 resource "aws_ecs_task_definition" "red" {
   family                   = "ws25-ecs-red-taskdef"
   network_mode             = "awsvpc"
@@ -350,7 +340,6 @@ resource "aws_ecs_task_definition" "red" {
   ])
 }
 
-# ECS Service for Green (EC2)
 resource "aws_ecs_service" "green" {
   name            = "ws25-ecs-green"
   cluster         = aws_ecs_cluster.main.id
@@ -358,14 +347,10 @@ resource "aws_ecs_service" "green" {
   desired_count   = 3
   launch_type     = "EC2"
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-    deployment_circuit_breaker {
-      enable   = true
-      rollback = true
-    }
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
+
+  enable_execute_command = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -382,7 +367,6 @@ resource "aws_ecs_service" "green" {
   depends_on = [aws_iam_role_policy_attachment.ecs_task_execution]
 }
 
-# ECS Service for Red (Fargate)
 resource "aws_ecs_service" "red" {
   name            = "ws25-ecs-red"
   cluster         = aws_ecs_cluster.main.id
@@ -390,14 +374,10 @@ resource "aws_ecs_service" "red" {
   desired_count   = 3
   launch_type     = "FARGATE"
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-    deployment_circuit_breaker {
-      enable   = true
-      rollback = true
-    }
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
+
+  enable_execute_command = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -414,7 +394,6 @@ resource "aws_ecs_service" "red" {
   depends_on = [aws_iam_role_policy_attachment.ecs_task_execution]
 }
 
-# EC2 Launch Template for ECS
 resource "aws_launch_template" "ecs_ec2" {
   name_prefix = "ws25-ecs-ec2-"
 
@@ -459,7 +438,6 @@ resource "aws_launch_template" "ecs_ec2" {
   )
 }
 
-# Auto Scaling Group for ECS EC2
 resource "aws_autoscaling_group" "ecs_ec2" {
   name                = "ws25-ecs-asg"
   vpc_zone_identifier = var.private_subnet_ids
@@ -485,7 +463,6 @@ resource "aws_autoscaling_group" "ecs_ec2" {
   }
 }
 
-# ECS Capacity Provider for EC2
 resource "aws_ecs_capacity_provider" "green_ec2" {
   name = "ws25-green-ec2-cp"
 
@@ -502,7 +479,6 @@ resource "aws_ecs_capacity_provider" "green_ec2" {
   }
 }
 
-# IAM Role for ECS EC2 Instances
 resource "aws_iam_role" "ecs_ec2" {
   name = "ws25-ecs-ec2-role"
 
@@ -530,7 +506,6 @@ resource "aws_iam_instance_profile" "ecs_ec2" {
   role = aws_iam_role.ecs_ec2.name
 }
 
-# Security Group for ECS EC2 Instances
 resource "aws_security_group" "ecs_ec2" {
   name        = "ws25-ecs-ec2-sg"
   description = "Security group for ECS EC2 instances"
@@ -555,7 +530,6 @@ resource "aws_security_group" "ecs_ec2" {
   }
 }
 
-# Data source for ECS optimized AMI
 data "aws_ami" "ecs_optimized" {
   most_recent = true
   owners      = ["amazon"]

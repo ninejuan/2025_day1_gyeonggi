@@ -1,4 +1,3 @@
-# IAM Role for CodePipeline
 resource "aws_iam_role" "codepipeline" {
   name = "ws25-codepipeline-role"
 
@@ -64,7 +63,6 @@ resource "aws_iam_role_policy" "codepipeline" {
   })
 }
 
-# CloudWatch Event Role for Pipeline Trigger
 resource "aws_iam_role" "cloudwatch_pipeline" {
   name = "ws25-cloudwatch-pipeline-role"
 
@@ -100,7 +98,6 @@ resource "aws_iam_role_policy" "cloudwatch_pipeline" {
   })
 }
 
-# CodePipeline for Green Application
 resource "aws_codepipeline" "green" {
   name     = "ws25-cd-green-pipeline"
   role_arn = aws_iam_role.codepipeline.arn
@@ -151,7 +148,6 @@ resource "aws_codepipeline" "green" {
   }
 }
 
-# CodePipeline for Red Application
 resource "aws_codepipeline" "red" {
   name     = "ws25-cd-red-pipeline"
   role_arn = aws_iam_role.codepipeline.arn
@@ -202,7 +198,6 @@ resource "aws_codepipeline" "red" {
   }
 }
 
-# CloudWatch Event Rule for Green Pipeline
 resource "aws_cloudwatch_event_rule" "green_pipeline" {
   name        = "ws25-green-pipeline-trigger"
   description = "Trigger green pipeline on S3 object upload"
@@ -228,7 +223,6 @@ resource "aws_cloudwatch_event_target" "green_pipeline" {
   role_arn  = aws_iam_role.cloudwatch_pipeline.arn
 }
 
-# CloudWatch Event Rule for Red Pipeline
 resource "aws_cloudwatch_event_rule" "red_pipeline" {
   name        = "ws25-red-pipeline-trigger"
   description = "Trigger red pipeline on S3 object upload"

@@ -1,4 +1,3 @@
-# IAM Role for CodeDeploy
 resource "aws_iam_role" "codedeploy" {
   name = "ws25-codedeploy-role"
 
@@ -21,19 +20,16 @@ resource "aws_iam_role_policy_attachment" "codedeploy" {
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"
 }
 
-# CodeDeploy Application for Green
 resource "aws_codedeploy_app" "green" {
   name             = "ws25-cd-green-app"
   compute_platform = "ECS"
 }
 
-# CodeDeploy Application for Red
 resource "aws_codedeploy_app" "red" {
   name             = "ws25-cd-red-app"
   compute_platform = "ECS"
 }
 
-# CodeDeploy Deployment Group for Green
 resource "aws_codedeploy_deployment_group" "green" {
   app_name               = aws_codedeploy_app.green.name
   deployment_group_name  = "ws25-cd-green-dg"
@@ -87,7 +83,6 @@ resource "aws_codedeploy_deployment_group" "green" {
   }
 }
 
-# CodeDeploy Deployment Group for Red
 resource "aws_codedeploy_deployment_group" "red" {
   app_name               = aws_codedeploy_app.red.name
   deployment_group_name  = "ws25-cd-red-dg"

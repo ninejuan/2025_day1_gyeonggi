@@ -74,9 +74,8 @@ resource "aws_iam_instance_profile" "bastion" {
   role = aws_iam_role.bastion.name
 }
 
-# User data script
 locals {
-  user_data = templatefile("${path.module}/../scripts/bastion-userdata.sh", {})
+  user_data = templatefile("${path.module}/../../scripts/bastion-userdata.sh", {})
 }
 
 # Bastion EC2 Instance
@@ -111,7 +110,6 @@ resource "aws_eip_association" "bastion" {
   allocation_id = aws_eip.bastion.id
 }
 
-# Data source for Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]

@@ -1,4 +1,3 @@
-# ECR Repository for Green Application
 resource "aws_ecr_repository" "green" {
   name                 = "green"
   image_tag_mutability = "IMMUTABLE" # 같은 태그 재사용 방지
@@ -17,7 +16,6 @@ resource "aws_ecr_repository" "green" {
   }
 }
 
-# ECR Repository for Red Application
 resource "aws_ecr_repository" "red" {
   name                 = "red"
   image_tag_mutability = "IMMUTABLE" # 같은 태그 재사용 방지
@@ -37,7 +35,6 @@ resource "aws_ecr_repository" "red" {
   }
 }
 
-# ECR Repository for Fluentbit (Logging용)
 resource "aws_ecr_repository" "fluentbit" {
   name                 = "fluentbit"
   image_tag_mutability = "MUTABLE"
@@ -55,7 +52,6 @@ resource "aws_ecr_repository" "fluentbit" {
   }
 }
 
-# ECR Lifecycle Policy for Green (이미지 수 제한)
 resource "aws_ecr_lifecycle_policy" "green" {
   repository = aws_ecr_repository.green.name
 
@@ -90,7 +86,6 @@ resource "aws_ecr_lifecycle_policy" "green" {
   })
 }
 
-# ECR Lifecycle Policy for Red (이미지 수 제한)
 resource "aws_ecr_lifecycle_policy" "red" {
   repository = aws_ecr_repository.red.name
 
