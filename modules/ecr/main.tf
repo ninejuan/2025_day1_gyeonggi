@@ -133,12 +133,13 @@ resource "null_resource" "build_and_push_green" {
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
       
       # Build and push Green v1.0.0
-      cd ${path.module}/../../app-files/docker
-      docker build -f Dockerfile.green --build-arg VERSION=1.0.0 -t ${aws_ecr_repository.green.repository_url}:v1.0.0 .
+      cd ${path.module}/../../app-files/docker/green/1.0.0
+      docker build --platform linux/amd64 -t ${aws_ecr_repository.green.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.0
       
       # Build and push Green v1.0.1  
-      docker build -f Dockerfile.green --build-arg VERSION=1.0.1 -t ${aws_ecr_repository.green.repository_url}:v1.0.1 .
+      cd ${path.module}/../../app-files/docker/green/1.0.1
+      docker build --platform linux/amd64 -t ${aws_ecr_repository.green.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.1
       
       echo "Green images pushed successfully"
@@ -159,12 +160,13 @@ resource "null_resource" "build_and_push_red" {
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
       
       # Build and push Red v1.0.0
-      cd ${path.module}/../../app-files/docker
-      docker build -f Dockerfile.red --build-arg VERSION=1.0.0 -t ${aws_ecr_repository.red.repository_url}:v1.0.0 .
+      cd ${path.module}/../../app-files/docker/red/1.0.0
+      docker build --platform linux/amd64 -t ${aws_ecr_repository.red.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.0
       
       # Build and push Red v1.0.1
-      docker build -f Dockerfile.red --build-arg VERSION=1.0.1 -t ${aws_ecr_repository.red.repository_url}:v1.0.1 .
+      cd ${path.module}/../../app-files/docker/red/1.0.1
+      docker build --platform linux/amd64 -t ${aws_ecr_repository.red.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.1
       
       echo "Red images pushed successfully"

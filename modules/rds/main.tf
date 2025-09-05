@@ -1,8 +1,55 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
   deletion_window_in_days = 10
   enable_key_rotation     = true
   rotation_period_in_days = 90
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key for RDS"
+        Effect = "Allow"
+        Principal = {
+          Service = "rds.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey*",
+          "kms:ReEncrypt*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key for ECS"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey*",
+          "kms:ReEncrypt*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "ws25-kms"
@@ -100,8 +147,7 @@ resource "aws_rds_cluster" "main" {
   # 로그 설정
   enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
 
-  # 성능 인사이트
-  enable_http_endpoint = true
+  # 성능 인사이트 (HTTP endpoint는 해당 엔진 버전에서 지원되지 않음)
 
   # 백트랙 설정 (3시간)
   backtrack_window = 3
@@ -191,7 +237,12 @@ resource "null_resource" "db_init" {
         if [[ "$OSTYPE" == "darwin"* ]]; then
           brew install mysql-client || true
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          sudo yum install -y mysql || sudo apt-get install -y mysql-client || true
+          # Amazon Linux 2023 uses dnf and mariadb105
+          if command -v dnf &> /dev/null; then
+            sudo dnf install -y mariadb105 || true
+          else
+            sudo yum install -y mysql || sudo apt-get install -y mysql-client || true
+          fi
         fi
       fi
       

@@ -347,10 +347,15 @@ resource "aws_ecs_service" "green" {
   desired_count   = 3
   launch_type     = "EC2"
 
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 100
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
 
   enable_execute_command = true
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count, load_balancer]
+  }
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -358,11 +363,7 @@ resource "aws_ecs_service" "green" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = var.alb_target_group_green_arn
-    container_name   = "green"
-    container_port   = 8080
-  }
+  # Load balancer configuration managed by CodeDeploy for Blue/Green deployment
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution,
@@ -377,10 +378,15 @@ resource "aws_ecs_service" "red" {
   desired_count   = 3
   launch_type     = "FARGATE"
 
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 100
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
 
   enable_execute_command = true
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count, load_balancer]
+  }
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -388,11 +394,7 @@ resource "aws_ecs_service" "red" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = var.alb_target_group_red_arn
-    container_name   = "red"
-    container_port   = 8080
-  }
+  # Load balancer configuration managed by CodeDeploy for Blue/Green deployment
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution,
@@ -409,7 +411,6 @@ resource "aws_launch_template" "ecs_ec2" {
       volume_size = 30
       volume_type = "gp3"
       encrypted   = true
-      kms_key_id  = var.kms_key_arn
     }
   }
 
@@ -437,11 +438,7 @@ resource "aws_launch_template" "ecs_ec2" {
     }
   }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
-  EOF
-  )
+  user_data = base64encode("#!/bin/bash\necho 'ECS_CLUSTER=${aws_ecs_cluster.main.name}' >> /etc/ecs/ecs.config")
 }
 
 resource "aws_autoscaling_group" "ecs_ec2" {
@@ -474,7 +471,7 @@ resource "aws_ecs_capacity_provider" "green_ec2" {
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ecs_ec2.arn
-    managed_termination_protection = "ENABLED"
+    managed_termination_protection = "DISABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 10

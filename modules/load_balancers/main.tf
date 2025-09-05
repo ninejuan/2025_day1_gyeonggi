@@ -175,6 +175,55 @@ resource "aws_lb_target_group" "red" {
   }
 }
 
+# Blue/Green 배포를 위한 추가 타겟 그룹들
+resource "aws_lb_target_group" "green_blue" {
+  name        = "ws25-alb-green-tg-blue"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = var.app_vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "ws25-alb-green-tg-blue"
+  }
+}
+
+resource "aws_lb_target_group" "red_blue" {
+  name        = "ws25-alb-red-tg-blue"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = var.app_vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name = "ws25-alb-red-tg-blue"
+  }
+}
+
 resource "aws_lb_listener" "app_alb" {
   load_balancer_arn = aws_lb.app_alb.arn
   port              = 80

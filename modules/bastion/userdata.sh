@@ -11,7 +11,7 @@ echo "Updating system packages..."
 dnf update -y
 
 echo "Installing required packages..."
-dnf install -y aws-cli-v2 curl jq mysql
+dnf install -y aws-cli-v2 curl jq mariadb105
 
 echo "Configuring SSH port to 10100..."
 sed -i 's/^#Port 22/Port 10100/' /etc/ssh/sshd_config
