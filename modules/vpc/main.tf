@@ -363,11 +363,23 @@ resource "aws_route" "app_db_c_to_hub" {
 resource "aws_cloudwatch_log_group" "hub_flow_logs" {
   name              = "/ws25/flow/hub"
   retention_in_days = 7
+
+  tags = {
+    Name        = "ws25-hub-flow-logs"
+    Environment = "production"
+    Service     = "vpc-flow-logs"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "app_flow_logs" {
   name              = "/ws25/flow/app"
   retention_in_days = 7
+
+  tags = {
+    Name        = "ws25-app-flow-logs"
+    Environment = "production"
+    Service     = "vpc-flow-logs"
+  }
 }
 
 resource "aws_iam_role" "flow_logs" {

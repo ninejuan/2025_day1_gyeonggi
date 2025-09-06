@@ -10,8 +10,8 @@
     {
       "name": "red",
       "image": "<IMAGE_URI>",
-      "cpu": 512,
-      "memory": 1024,
+      "cpu": 256,
+      "memory": 512,
       "essential": true,
       "portMappings": [
         {
@@ -21,40 +21,27 @@
       ],
       "secrets": [
         {
-          "name": "DB_HOST",
-          "valueFrom": "<SECRET_ARN>:DB_HOST::"
+          "name": "DB_URL",
+          "valueFrom": "<SECRET_ARN>:DB_URL::"
         },
         {
-          "name": "DB_PORT",
-          "valueFrom": "<SECRET_ARN>:DB_PORT::"
+          "name": "DB_USER",
+          "valueFrom": "<SECRET_ARN>:DB_USER::"
         },
         {
-          "name": "DB_NAME",
-          "valueFrom": "<SECRET_ARN>:DB_NAME::"
-        },
-        {
-          "name": "DB_USERNAME",
-          "valueFrom": "<SECRET_ARN>:DB_USERNAME::"
-        },
-        {
-          "name": "DB_PASSWORD",
-          "valueFrom": "<SECRET_ARN>:DB_PASSWORD::"
+          "name": "DB_PASSWD",
+          "valueFrom": "<SECRET_ARN>:DB_PASSWD::"
         }
       ],
       "logConfiguration": {
         "logDriver": "awsfirelens"
-      },
-      "healthCheck": {
-        "command": ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"],
-        "interval": 30,
-        "timeout": 5,
-        "retries": 3,
-        "startPeriod": 60
       }
     },
     {
       "name": "log_router",
-      "image": "<FLUENTBIT_IMAGE_URI>",
+      "image": "amazon/aws-for-fluent-bit:latest",
+      "cpu": 128,
+      "memory": 256,
       "essential": true,
       "firelensConfiguration": {
         "type": "fluentbit",
@@ -68,9 +55,15 @@
         "options": {
           "awslogs-group": "/ws25/logs/fluentbit",
           "awslogs-region": "ap-northeast-2",
-          "awslogs-stream-prefix": "firelens"
+          "awslogs-stream-prefix": "red"
         }
-      }
+      },
+      "environment": [
+        {
+          "name": "FLB_LOG_LEVEL",
+          "value": "info"
+        }
+      ]
     }
   ]
 }

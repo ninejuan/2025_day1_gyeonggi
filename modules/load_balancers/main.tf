@@ -323,6 +323,4 @@ resource "aws_lb_listener_rule" "health" {
 resource "aws_lb_target_group_attachment" "alb_to_nlb" {
   target_group_arn = aws_lb_target_group.app_nlb.arn
   target_id        = aws_lb.app_alb.id
-  port             = 80
 }
-

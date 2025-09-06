@@ -1,13 +1,10 @@
-# Bastion용 SSH 키 페어
 resource "aws_key_pair" "bastion" {
   key_name   = "ws25-bastion-key"
   public_key = file("${path.module}/ssh/ws25-bastion-key.pub")
 }
 
-# Bastion Security Group
 resource "aws_security_group" "bastion" {
   name        = "ws25-bastion-sg"
-  description = "Security group for bastion host"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -15,7 +12,6 @@ resource "aws_security_group" "bastion" {
     to_port     = 10100
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH on port 10100"
   }
 
   egress {
@@ -23,7 +19,6 @@ resource "aws_security_group" "bastion" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
   }
 
   tags = {
@@ -31,7 +26,6 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-# Elastic IP for Bastion
 resource "aws_eip" "bastion" {
   domain = "vpc"
 
@@ -40,7 +34,6 @@ resource "aws_eip" "bastion" {
   }
 }
 
-# IAM Role for Bastion
 resource "aws_iam_role" "bastion" {
   name = "ws25-bastion-role"
 
@@ -62,23 +55,22 @@ resource "aws_iam_role" "bastion" {
   }
 }
 
-# IAM Policy for Bastion (Admin Access)
 resource "aws_iam_role_policy_attachment" "bastion_admin" {
   role       = aws_iam_role.bastion.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
-# IAM Instance Profile for Bastion
 resource "aws_iam_instance_profile" "bastion" {
-  name = "ws25-bastion-profile"
+  name = "ws25-bastion-role"
   role = aws_iam_role.bastion.name
 }
 
 locals {
-  user_data = templatefile("${path.module}/userdata.sh", {})
+  user_data = templatefile("${path.module}/userdata.sh", {
+    contestant_number = var.contestant_number
+  })
 }
 
-# Bastion EC2 Instance
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t3.small"
@@ -90,7 +82,6 @@ resource "aws_instance" "bastion" {
 
   user_data = base64encode(local.user_data)
 
-  # 인스턴스 종료 보호
   disable_api_termination = true
 
   root_block_device {
@@ -104,7 +95,6 @@ resource "aws_instance" "bastion" {
   }
 }
 
-# Associate EIP with Bastion
 resource "aws_eip_association" "bastion" {
   instance_id   = aws_instance.bastion.id
   allocation_id = aws_eip.bastion.id

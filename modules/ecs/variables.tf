@@ -49,3 +49,13 @@ variable "red_ecr_build_complete" {
   type        = any
   default     = null
 }
+
+variable "green_target_group_arn" {
+  description = "ARN of the Green target group for load balancer"
+  type        = string
+}
+
+variable "red_target_group_arn" {
+  description = "ARN of the Red target group for load balancer"
+  type        = string
+}

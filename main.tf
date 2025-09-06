@@ -22,8 +22,9 @@ module "vpc_endpoints" {
 module "bastion" {
   source = "./modules/bastion"
 
-  vpc_id    = module.vpc.hub_vpc_id
-  subnet_id = module.vpc.hub_public_subnet_ids["c"]
+  vpc_id            = module.vpc.hub_vpc_id
+  subnet_id         = module.vpc.hub_public_subnet_ids["c"]
+  contestant_number = var.contestant_number
 }
 
 # Secrets Manager 모듈
@@ -61,6 +62,8 @@ module "ecs" {
   private_subnet_ids         = module.vpc.app_private_subnet_ids
   alb_target_group_green_arn = module.load_balancers.alb_target_group_green_arn
   alb_target_group_red_arn   = module.load_balancers.alb_target_group_red_arn
+  green_target_group_arn     = module.load_balancers.alb_target_group_green_arn
+  red_target_group_arn       = module.load_balancers.alb_target_group_red_arn
   green_ecr_url              = module.ecr.green_repository_url
   red_ecr_url                = module.ecr.red_repository_url
   secrets_arn                = module.secrets.secret_arn
@@ -94,6 +97,8 @@ module "monitoring" {
 # S3 버킷 모듈
 module "s3" {
   source = "./modules/s3"
+  
+  contestant_number = var.contestant_number
 }
 
 # CodeDeploy 모듈

@@ -2,9 +2,8 @@ resource "aws_ecs_cluster" "main" {
   name = "ws25-ecs-cluster"
 
   configuration {
-    execute_command_configuration {
+    managed_storage_configuration {
       kms_key_id = var.kms_key_arn
-      logging    = "DEFAULT"
     }
   }
 
@@ -171,34 +170,18 @@ resource "aws_ecs_task_definition" "green" {
 
       secrets = [
         {
-          name      = "DB_HOST"
-          valueFrom = "${var.secrets_arn}:DB_HOST::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.secrets_arn}:DB_PORT::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.secrets_arn}:DB_NAME::"
+          name      = "DB_URL"
+          valueFrom = "${var.secrets_arn}:DB_URL::"
         },
         {
           name      = "DB_USER"
           valueFrom = "${var.secrets_arn}:DB_USER::"
         },
         {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.secrets_arn}:DB_PASSWORD::"
+          name      = "DB_PASSWD"
+          valueFrom = "${var.secrets_arn}:DB_PASSWD::"
         }
       ]
-
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
 
       logConfiguration = {
         logDriver = "awsfirelens"
@@ -270,35 +253,19 @@ resource "aws_ecs_task_definition" "red" {
 
       secrets = [
         {
-          name      = "DB_HOST"
-          valueFrom = "${var.secrets_arn}:DB_HOST::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.secrets_arn}:DB_PORT::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.secrets_arn}:DB_NAME::"
+          name      = "DB_URL"
+          valueFrom = "${var.secrets_arn}:DB_URL::"
         },
         {
           name      = "DB_USER"
           valueFrom = "${var.secrets_arn}:DB_USER::"
         },
         {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.secrets_arn}:DB_PASSWORD::"
+          name      = "DB_PASSWD"
+          valueFrom = "${var.secrets_arn}:DB_PASSWD::"
         }
       ]
-
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
-
+      
       logConfiguration = {
         logDriver = "awsfirelens"
       }
@@ -351,7 +318,9 @@ resource "aws_ecs_service" "green" {
     type = "CODE_DEPLOY"
   }
 
-  enable_execute_command = true
+  enable_execute_command    = true
+  enable_ecs_managed_tags   = true
+  propagate_tags           = "SERVICE"
 
   lifecycle {
     ignore_changes = [task_definition, desired_count, load_balancer]
@@ -363,7 +332,11 @@ resource "aws_ecs_service" "green" {
     assign_public_ip = false
   }
 
-  # Load balancer configuration managed by CodeDeploy for Blue/Green deployment
+  load_balancer {
+    target_group_arn = var.green_target_group_arn
+    container_name   = "green"
+    container_port   = 8080
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution,
@@ -382,7 +355,9 @@ resource "aws_ecs_service" "red" {
     type = "CODE_DEPLOY"
   }
 
-  enable_execute_command = true
+  enable_execute_command    = true
+  enable_ecs_managed_tags   = true
+  propagate_tags           = "SERVICE"
 
   lifecycle {
     ignore_changes = [task_definition, desired_count, load_balancer]
@@ -394,7 +369,11 @@ resource "aws_ecs_service" "red" {
     assign_public_ip = false
   }
 
-  # Load balancer configuration managed by CodeDeploy for Blue/Green deployment
+  load_balancer {
+    target_group_arn = var.red_target_group_arn
+    container_name   = "red"
+    container_port   = 8080
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution,

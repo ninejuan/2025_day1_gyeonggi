@@ -17,36 +17,6 @@ resource "aws_kms_key" "rds" {
         }
         Action   = "kms:*"
         Resource = "*"
-      },
-      {
-        Sid    = "Allow use of the key for RDS"
-        Effect = "Allow"
-        Principal = {
-          Service = "rds.amazonaws.com"
-        }
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:Encrypt",
-          "kms:GenerateDataKey*",
-          "kms:ReEncrypt*"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow use of the key for ECS"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs.amazonaws.com"
-        }
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:Encrypt",
-          "kms:GenerateDataKey*",
-          "kms:ReEncrypt*"
-        ]
-        Resource = "*"
       }
     ]
   })
@@ -126,7 +96,7 @@ resource "aws_db_parameter_group" "main" {
 resource "aws_rds_cluster" "main" {
   cluster_identifier              = "ws25-rdb-cluster"
   engine                          = "aurora-mysql"
-  engine_version                  = "8.0.mysql_aurora.3.04.1"
+  engine_version                  = "8.0.mysql_aurora.3.08.2"
   master_username                 = "admin"
   master_password                 = "Skill53##"
   database_name                   = "day1"
@@ -142,15 +112,13 @@ resource "aws_rds_cluster" "main" {
   # 백업 설정
   backup_retention_period      = 34
   preferred_backup_window      = "03:00-04:00"
-  preferred_maintenance_window = "sun:04:00-sun:05:00"
 
-  # 로그 설정
-  enabled_cloudwatch_logs_exports = ["audit", "error", "general", "slowquery"]
-
-  # 성능 인사이트 (HTTP endpoint는 해당 엔진 버전에서 지원되지 않음)
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.rds.arn
+  enabled_cloudwatch_logs_exports = ["audit", "error", "general", "instance"]
 
   # 백트랙 설정 (3시간)
-  backtrack_window = 3
+  backtrack_window = 10800
 
   skip_final_snapshot = true
 
@@ -167,13 +135,11 @@ resource "aws_rds_cluster_instance" "writer" {
   engine_version          = aws_rds_cluster.main.engine_version
   db_parameter_group_name = aws_db_parameter_group.main.name
 
-  # 향상된 모니터링
   monitoring_interval = 60
   monitoring_role_arn = aws_iam_role.rds_monitoring.arn
 
-  # 성능 인사이트
-  performance_insights_enabled    = true
-  performance_insights_kms_key_id = aws_kms_key.rds.arn
+  # 외부 접속 허용
+  publicly_accessible = true
 
   tags = {
     Name = "ws25-rdb-instance-1"
@@ -192,9 +158,8 @@ resource "aws_rds_cluster_instance" "reader" {
   monitoring_interval = 60
   monitoring_role_arn = aws_iam_role.rds_monitoring.arn
 
-  # 성능 인사이트
-  performance_insights_enabled    = true
-  performance_insights_kms_key_id = aws_kms_key.rds.arn
+  # 외부 접속 허용
+  publicly_accessible = true
 
   tags = {
     Name = "ws25-rdb-instance-2"

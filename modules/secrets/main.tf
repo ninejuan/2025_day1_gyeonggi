@@ -13,10 +13,8 @@ resource "aws_secretsmanager_secret_version" "app_secret" {
   secret_id = aws_secretsmanager_secret.app_secret.id
 
   secret_string = jsonencode({
-    DB_HOST     = var.db_endpoint
-    DB_PORT     = "10101"
-    DB_NAME     = var.db_name
-    DB_USER     = var.db_username
-    DB_PASSWORD = var.db_password
+    DB_URL    = "mysql://${var.db_username}:${var.db_password}@${var.db_endpoint}:10101/${var.db_name}"
+    DB_USER   = var.db_username
+    DB_PASSWD = var.db_password
   })
 }

@@ -1,8 +1,6 @@
-data "aws_caller_identity" "current" {}
-
 # S3 버킷 for Green 파이프라인 아티팩트
 resource "aws_s3_bucket" "green_artifact" {
-  bucket = "ws25-cd-green-artifact-${data.aws_caller_identity.current.account_id}"
+  bucket = "ws25-cd-green-artifact-${var.contestant_number}"
 
   tags = {
     Name = "ws25-cd-green-artifact"
@@ -28,7 +26,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "green_artifact" {
 
 # S3 버킷 for Red 파이프라인 아티팩트
 resource "aws_s3_bucket" "red_artifact" {
-  bucket = "ws25-cd-red-artifact-${data.aws_caller_identity.current.account_id}"
+  bucket = "ws25-cd-red-artifact-${var.contestant_number}"
 
   tags = {
     Name = "ws25-cd-red-artifact"
@@ -54,7 +52,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "red_artifact" {
 
 # S3 버킷 for 파이프라인 파일 배포
 resource "aws_s3_bucket" "pipeline_files" {
-  bucket = "ws25-pipeline-files-${data.aws_caller_identity.current.account_id}"
+  bucket = "ws25-pipeline-files-${var.contestant_number}"
 
   tags = {
     Name = "ws25-pipeline-files"
@@ -119,4 +117,20 @@ resource "aws_s3_object" "red_taskdef" {
   key    = "artifact/red/taskdef.json"
   source = "${path.module}/../../app-files/pipeline/artifact/red/taskdef.json"
   etag   = filemd5("${path.module}/../../app-files/pipeline/artifact/red/taskdef.json")
+}
+
+# Green artifact.zip을 Green artifact 버킷에 업로드
+resource "aws_s3_object" "green_artifact_zip" {
+  bucket = aws_s3_bucket.green_artifact.id
+  key    = "artifact.zip"
+  source = "${path.module}/../../app-files/pipeline/artifact/green/artifact.zip"
+  etag   = filemd5("${path.module}/../../app-files/pipeline/artifact/green/artifact.zip")
+}
+
+# Red artifact.zip을 Red artifact 버킷에 업로드
+resource "aws_s3_object" "red_artifact_zip" {
+  bucket = aws_s3_bucket.red_artifact.id
+  key    = "artifact.zip"
+  source = "${path.module}/../../app-files/pipeline/artifact/red/artifact.zip"
+  etag   = filemd5("${path.module}/../../app-files/pipeline/artifact/red/artifact.zip")
 }
