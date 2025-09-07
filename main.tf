@@ -47,6 +47,17 @@ module "rds" {
   bastion_security_group_id = module.bastion.security_group_id
 }
 
+# ECS에서 RDS로의 접근을 허용하는 보안 그룹 규칙
+resource "aws_security_group_rule" "rds_allow_ecs" {
+  type                     = "ingress"
+  from_port                = 10101
+  to_port                  = 10101
+  protocol                 = "tcp"
+  source_security_group_id = module.ecs.ecs_tasks_security_group_id
+  security_group_id        = module.rds.rds_security_group_id
+  description              = "Allow MySQL from ECS"
+}
+
 # ECR 모듈
 module "ecr" {
   source = "./modules/ecr"

@@ -53,6 +53,7 @@ resource "aws_security_group" "rds" {
     description     = "Allow MySQL from Bastion"
   }
 
+
   ingress {
     from_port   = 10101
     to_port     = 10101

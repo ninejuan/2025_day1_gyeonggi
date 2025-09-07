@@ -111,7 +111,7 @@ data "archive_file" "lambda_validation" {
   type        = "zip"
   output_path = "lambda_validation.zip"
   source {
-    content = file("${path.module}/../../app-files/pipeline/lambda_validation.py")
+    content = file("${path.module}/validation.py")
     filename = "index.py"
   }
 }
