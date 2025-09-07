@@ -1,4 +1,3 @@
-# S3 버킷 for Green 파이프라인 아티팩트
 resource "aws_s3_bucket" "green_artifact" {
   bucket = "ws25-cd-green-artifact-${var.contestant_number}"
 
@@ -24,7 +23,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "green_artifact" {
   }
 }
 
-# S3 버킷 for Red 파이프라인 아티팩트
 resource "aws_s3_bucket" "red_artifact" {
   bucket = "ws25-cd-red-artifact-${var.contestant_number}"
 
@@ -50,7 +48,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "red_artifact" {
   }
 }
 
-# S3 버킷 for 파이프라인 파일 배포
 resource "aws_s3_bucket" "pipeline_files" {
   bucket = "ws25-pipeline-files-${var.contestant_number}"
 

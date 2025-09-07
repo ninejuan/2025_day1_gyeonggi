@@ -1,6 +1,3 @@
-# AWS World Skills 25 경기도 대회 인프라 구성
-
-# VPC 모듈
 module "vpc" {
   source = "./modules/vpc"
 
@@ -8,7 +5,6 @@ module "vpc" {
   environment  = var.environment
 }
 
-# VPC 엔드포인트 모듈
 module "vpc_endpoints" {
   source = "./modules/vpc_endpoints"
 
@@ -18,7 +14,6 @@ module "vpc_endpoints" {
   route_table_ids    = module.vpc.app_private_route_table_ids
 }
 
-# Bastion EC2 인스턴스 모듈
 module "bastion" {
   source = "./modules/bastion"
 
@@ -27,7 +22,6 @@ module "bastion" {
   contestant_number = var.contestant_number
 }
 
-# Secrets Manager 모듈
 module "secrets" {
   source = "./modules/secrets"
 
@@ -38,7 +32,6 @@ module "secrets" {
   db_password = module.rds.master_password
 }
 
-# RDS Aurora MySQL 모듈
 module "rds" {
   source = "./modules/rds"
 
@@ -47,7 +40,6 @@ module "rds" {
   bastion_security_group_id = module.bastion.security_group_id
 }
 
-# ECS에서 RDS로의 접근을 허용하는 보안 그룹 규칙
 resource "aws_security_group_rule" "rds_allow_ecs" {
   type                     = "ingress"
   from_port                = 10101
@@ -58,14 +50,12 @@ resource "aws_security_group_rule" "rds_allow_ecs" {
   description              = "Allow MySQL from ECS"
 }
 
-# ECR 모듈
 module "ecr" {
   source = "./modules/ecr"
 
   kms_key_arn = module.rds.kms_key_arn
 }
 
-# ECS 클러스터 모듈
 module "ecs" {
   source = "./modules/ecs"
 
@@ -85,7 +75,6 @@ module "ecs" {
   depends_on = [module.vpc_endpoints]
 }
 
-# 로드 밸런서 모듈
 module "load_balancers" {
   source = "./modules/load_balancers"
 
@@ -96,7 +85,6 @@ module "load_balancers" {
   app_private_subnet_ids = module.vpc.app_private_subnet_ids
 }
 
-# CloudWatch 모니터링 모듈
 module "monitoring" {
   source = "./modules/monitoring"
 
@@ -105,14 +93,12 @@ module "monitoring" {
   app_vpc_id     = module.vpc.app_vpc_id
 }
 
-# S3 버킷 모듈
 module "s3" {
   source = "./modules/s3"
   
   contestant_number = var.contestant_number
 }
 
-# CodeDeploy 모듈
 module "codedeploy" {
   source = "./modules/codedeploy"
 
@@ -126,7 +112,6 @@ module "codedeploy" {
   alb_target_group_red_name    = module.load_balancers.alb_target_group_red_name
 }
 
-# CodePipeline 모듈
 module "pipeline" {
   source = "./modules/pipeline"
 

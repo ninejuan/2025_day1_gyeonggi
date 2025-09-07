@@ -1,4 +1,3 @@
-# S3 VPC Endpoint (Gateway)
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = var.vpc_id
   service_name      = "com.amazonaws.ap-northeast-2.s3"
@@ -10,7 +9,6 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
-# ECR API VPC Endpoint
 resource "aws_vpc_endpoint" "ecr_api" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.ecr.api"
@@ -24,7 +22,6 @@ resource "aws_vpc_endpoint" "ecr_api" {
   }
 }
 
-# ECR DKR VPC Endpoint
 resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.ecr.dkr"
@@ -38,7 +35,6 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   }
 }
 
-# CloudWatch Logs VPC Endpoint
 resource "aws_vpc_endpoint" "logs" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.logs"
@@ -52,7 +48,6 @@ resource "aws_vpc_endpoint" "logs" {
   }
 }
 
-# Secrets Manager VPC Endpoint
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.secretsmanager"
@@ -66,7 +61,6 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   }
 }
 
-# ECS VPC Endpoint
 resource "aws_vpc_endpoint" "ecs" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.ecs"
@@ -80,7 +74,6 @@ resource "aws_vpc_endpoint" "ecs" {
   }
 }
 
-# ECS Agent VPC Endpoint
 resource "aws_vpc_endpoint" "ecs_agent" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.ecs-agent"
@@ -94,7 +87,6 @@ resource "aws_vpc_endpoint" "ecs_agent" {
   }
 }
 
-# ECS Telemetry VPC Endpoint
 resource "aws_vpc_endpoint" "ecs_telemetry" {
   vpc_id              = var.vpc_id
   service_name        = "com.amazonaws.ap-northeast-2.ecs-telemetry"

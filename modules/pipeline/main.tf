@@ -248,13 +248,11 @@ resource "aws_cloudwatch_event_target" "red_pipeline" {
   role_arn  = aws_iam_role.cloudwatch_pipeline.arn
 }
 
-# S3 Bucket Notification for Green
 resource "aws_s3_bucket_notification" "green" {
   bucket      = var.green_s3_bucket
   eventbridge = true
 }
 
-# S3 Bucket Notification for Red
 resource "aws_s3_bucket_notification" "red" {
   bucket      = var.red_s3_bucket
   eventbridge = true

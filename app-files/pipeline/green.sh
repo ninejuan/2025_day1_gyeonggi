@@ -1,6 +1,4 @@
 #!/bin/bash
-# Green 애플리케이션 배포 스크립트
-
 set -e
 
 ARTIFACT_DIR="/home/ec2-user/pipeline/artifact/green"

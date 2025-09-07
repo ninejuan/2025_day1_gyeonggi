@@ -60,7 +60,6 @@ resource "aws_iam_role_policy" "lambda_codedeploy" {
   })
 }
 
-# Lambda 검증 함수들
 resource "aws_lambda_function" "validate_before_install" {
   filename         = "lambda_validation.zip"
   function_name    = "LambdaFunctionToValidateBeforeInstall"
@@ -106,7 +105,6 @@ resource "aws_lambda_function" "validate_after_allow_traffic" {
   source_code_hash = data.archive_file.lambda_validation.output_base64sha256
 }
 
-# Lambda 함수 코드
 data "archive_file" "lambda_validation" {
   type        = "zip"
   output_path = "lambda_validation.zip"

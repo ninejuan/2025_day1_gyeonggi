@@ -1,4 +1,3 @@
-# VPC IDs
 output "hub_vpc_id" {
   value = aws_vpc.hub.id
 }
@@ -7,7 +6,6 @@ output "app_vpc_id" {
   value = aws_vpc.app.id
 }
 
-# Subnet IDs
 output "hub_public_subnet_ids" {
   value = {
     a = aws_subnet.hub_public_a.id
@@ -38,7 +36,6 @@ output "app_db_subnet_ids" {
   ]
 }
 
-# Route Table IDs
 output "app_private_route_table_ids" {
   value = [
     aws_route_table.app_private_a.id,
@@ -47,7 +44,6 @@ output "app_private_route_table_ids" {
   ]
 }
 
-# Security Group IDs
 output "vpc_endpoint_security_group_id" {
   value = aws_security_group.vpc_endpoints.id
 }

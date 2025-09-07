@@ -1,6 +1,4 @@
 #!/bin/bash
-# Red 애플리케이션 배포 스크립트
-
 set -e
 
 ARTIFACT_DIR="/home/ec2-user/pipeline/artifact/red"
@@ -14,7 +12,6 @@ fi
 echo "Creating artifact.zip from $ARTIFACT_DIR"
 cd "$ARTIFACT_DIR"
 
-# artifact.zip 생성 (모든 파일들이 디렉토리 상단에 위치)
 zip -r artifact.zip *
 
 echo "Uploading artifact.zip to s3://$BUCKET_NAME/"

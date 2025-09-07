@@ -114,11 +114,9 @@ resource "aws_rds_cluster" "main" {
   vpc_security_group_ids          = [aws_security_group.rds.id]
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.main.name
 
-  # 암호화 설정
   storage_encrypted = true
   kms_key_id        = aws_kms_key.rds.arn
 
-  # 백업 설정
   backup_retention_period      = 34
   preferred_backup_window      = "03:00-04:00"
 
@@ -126,7 +124,6 @@ resource "aws_rds_cluster" "main" {
   performance_insights_kms_key_id = aws_kms_key.rds.arn
   enabled_cloudwatch_logs_exports = ["audit", "error", "general", "instance"]
 
-  # 백트랙 설정 (3시간)
   backtrack_window = 10800
 
   skip_final_snapshot = true
@@ -147,7 +144,6 @@ resource "aws_rds_cluster_instance" "writer" {
   monitoring_interval = 60
   monitoring_role_arn = aws_iam_role.rds_monitoring.arn
 
-  # 외부 접속 허용
   publicly_accessible = true
 
   tags = {
@@ -163,11 +159,9 @@ resource "aws_rds_cluster_instance" "reader" {
   engine_version          = aws_rds_cluster.main.engine_version
   db_parameter_group_name = aws_db_parameter_group.main.name
 
-  # 향상된 모니터링
   monitoring_interval = 60
   monitoring_role_arn = aws_iam_role.rds_monitoring.arn
 
-  # 외부 접속 허용
   publicly_accessible = true
 
   tags = {
@@ -202,16 +196,13 @@ resource "null_resource" "db_init" {
 
   provisioner "local-exec" {
     command = <<-EOF
-      # Wait for RDS to be fully available
       sleep 60
       
-      # Install mysql client if not available
       if ! command -v mysql &> /dev/null; then
         echo "Installing mysql client..."
         if [[ "$OSTYPE" == "darwin"* ]]; then
           brew install mysql-client || true
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          # Amazon Linux 2023 uses dnf and mariadb105
           if command -v dnf &> /dev/null; then
             sudo dnf install -y mariadb105 || true
           else
@@ -220,7 +211,6 @@ resource "null_resource" "db_init" {
         fi
       fi
       
-      # Execute SQL file
       mysql -h ${aws_rds_cluster.main.endpoint} -P 10101 -u admin -p'Skill53##' < ${path.module}/../../app-files/database/day1_table_v1.sql
       
       echo "Database initialization completed"

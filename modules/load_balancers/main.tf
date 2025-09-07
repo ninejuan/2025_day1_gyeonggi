@@ -175,7 +175,6 @@ resource "aws_lb_target_group" "red" {
   }
 }
 
-# Blue/Green 배포를 위한 추가 타겟 그룹들
 resource "aws_lb_target_group" "green_blue" {
   name        = "ws25-alb-green-tg-blue"
   port        = 8080
