@@ -39,7 +39,7 @@
     },
     {
       "name": "log_router",
-      "image": "amazon/aws-for-fluent-bit:latest",
+      "image": "<FLUENTBIT_IMAGE_URI>",
       "cpu": 128,
       "memory": 256,
       "essential": true,

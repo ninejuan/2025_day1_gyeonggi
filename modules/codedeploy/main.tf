@@ -20,6 +20,102 @@ resource "aws_iam_role_policy_attachment" "codedeploy" {
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"
 }
 
+resource "aws_iam_role" "lambda_validation" {
+  name = "ws25-lambda-validation-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  role       = aws_iam_role.lambda_validation.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "lambda_codedeploy" {
+  name = "lambda-codedeploy-policy"
+  role = aws_iam_role.lambda_validation.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "codedeploy:PutLifecycleEventHookExecutionStatus"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Lambda 검증 함수들
+resource "aws_lambda_function" "validate_before_install" {
+  filename         = "lambda_validation.zip"
+  function_name    = "LambdaFunctionToValidateBeforeInstall"
+  role            = aws_iam_role.lambda_validation.arn
+  handler         = "index.handler"
+  runtime         = "python3.9"
+  source_code_hash = data.archive_file.lambda_validation.output_base64sha256
+}
+
+resource "aws_lambda_function" "validate_after_traffic" {
+  filename         = "lambda_validation.zip"
+  function_name    = "LambdaFunctionToValidateAfterTraffic"
+  role            = aws_iam_role.lambda_validation.arn
+  handler         = "index.handler"
+  runtime         = "python3.9"
+  source_code_hash = data.archive_file.lambda_validation.output_base64sha256
+}
+
+resource "aws_lambda_function" "validate_after_test_traffic" {
+  filename         = "lambda_validation.zip"
+  function_name    = "LambdaFunctionToValidateAfterTestTrafficStarts"
+  role            = aws_iam_role.lambda_validation.arn
+  handler         = "index.handler"
+  runtime         = "python3.9"
+  source_code_hash = data.archive_file.lambda_validation.output_base64sha256
+}
+
+resource "aws_lambda_function" "validate_before_traffic" {
+  filename         = "lambda_validation.zip"
+  function_name    = "LambdaFunctionToValidateBeforeAllowingProductionTraffic"
+  role            = aws_iam_role.lambda_validation.arn
+  handler         = "index.handler"
+  runtime         = "python3.9"
+  source_code_hash = data.archive_file.lambda_validation.output_base64sha256
+}
+
+resource "aws_lambda_function" "validate_after_allow_traffic" {
+  filename         = "lambda_validation.zip"
+  function_name    = "LambdaFunctionToValidateAfterAllowingProductionTraffic"
+  role            = aws_iam_role.lambda_validation.arn
+  handler         = "index.handler"
+  runtime         = "python3.9"
+  source_code_hash = data.archive_file.lambda_validation.output_base64sha256
+}
+
+# Lambda 함수 코드
+data "archive_file" "lambda_validation" {
+  type        = "zip"
+  output_path = "lambda_validation.zip"
+  source {
+    content = file("${path.module}/../../app-files/pipeline/lambda_validation.py")
+    filename = "index.py"
+  }
+}
+
 resource "aws_codedeploy_app" "green" {
   name             = "ws25-cd-green-app"
   compute_platform = "ECS"

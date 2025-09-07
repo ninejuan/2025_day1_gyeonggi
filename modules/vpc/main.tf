@@ -185,6 +185,11 @@ resource "aws_route_table" "hub_public" {
     gateway_id = aws_internet_gateway.hub.id
   }
 
+  route {
+    cidr_block                = aws_vpc.app.cidr_block
+    vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  }
+
   tags = {
     Name = "ws25-hub-pub-rt"
   }
@@ -313,16 +318,19 @@ resource "aws_vpc_peering_connection" "hub_app" {
   vpc_id      = aws_vpc.hub.id
   auto_accept = true
 
+  accepter {
+    allow_remote_vpc_dns_resolution = true
+  }
+
+  requester {
+    allow_remote_vpc_dns_resolution = true
+  }
+
   tags = {
     Name = "ws25-peering"
   }
 }
 
-resource "aws_route" "hub_to_app" {
-  route_table_id            = aws_route_table.hub_public.id
-  destination_cidr_block    = aws_vpc.app.cidr_block
-  vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
-}
 
 resource "aws_route" "app_public_to_hub" {
   route_table_id            = aws_route_table.app_public.id
