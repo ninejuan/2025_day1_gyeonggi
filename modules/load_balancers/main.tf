@@ -1,3 +1,9 @@
+locals {
+  # App NLB static IPs and corresponding AZs
+  app_nlb_static_ips = ["10.200.20.100", "10.200.21.100", "10.200.22.100"]
+  app_nlb_azs        = ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
+}
+
 resource "aws_lb" "hub_nlb" {
   name               = "ws25-hub-nlb"
   internal           = false
@@ -48,7 +54,22 @@ resource "aws_lb" "app_nlb" {
   name               = "ws25-app-nlb"
   internal           = true
   load_balancer_type = "network"
-  subnets            = var.app_private_subnet_ids
+
+  # Use static private IP addresses
+  subnet_mapping {
+    subnet_id            = var.app_private_subnet_ids[0]  # ap-northeast-2a
+    private_ipv4_address = "10.200.20.100"
+  }
+
+  subnet_mapping {
+    subnet_id            = var.app_private_subnet_ids[1]  # ap-northeast-2b  
+    private_ipv4_address = "10.200.21.100"
+  }
+
+  subnet_mapping {
+    subnet_id            = var.app_private_subnet_ids[2]  # ap-northeast-2c
+    private_ipv4_address = "10.200.22.100"
+  }
 
   enable_deletion_protection       = false
   enable_cross_zone_load_balancing = true
@@ -323,31 +344,15 @@ resource "aws_lb_listener_rule" "health" {
 resource "aws_lb_target_group_attachment" "alb_to_nlb" {
   target_group_arn = aws_lb_target_group.app_nlb.arn
   target_id        = aws_lb.app_alb.id
+  port             = 80
 }
 
-data "aws_network_interfaces" "app_nlb" {
-  count = var.enable_nlb_cross_vpc_attachment ? 1 : 0
-  
-  filter {
-    name   = "description"
-    values = ["ELB ${aws_lb.app_nlb.arn_suffix}"]
-  }
-  
-  depends_on = [aws_lb.app_nlb]
-}
-
-data "aws_network_interface" "app_nlb_ips" {
-  count = var.enable_nlb_cross_vpc_attachment ? length(try(data.aws_network_interfaces.app_nlb[0].ids, [])) : 0
-  id    = var.enable_nlb_cross_vpc_attachment ? data.aws_network_interfaces.app_nlb[0].ids[count.index] : ""
-  
-  depends_on = [data.aws_network_interfaces.app_nlb]
-}
-
+# Static IP targets for Hub NLB to App NLB connection
 resource "aws_lb_target_group_attachment" "hub_nlb_to_app_nlb" {
-  count = var.enable_nlb_cross_vpc_attachment ? length(data.aws_network_interface.app_nlb_ips) : 0
+  count = var.enable_nlb_cross_vpc_attachment ? 3 : 0
   
   target_group_arn  = aws_lb_target_group.hub_nlb.arn
-  target_id         = data.aws_network_interface.app_nlb_ips[count.index].private_ip
+  target_id         = var.enable_nlb_cross_vpc_attachment ? local.app_nlb_static_ips[count.index] : ""
   port              = 80
-  availability_zone = data.aws_network_interface.app_nlb_ips[count.index].availability_zone
+  availability_zone = var.enable_nlb_cross_vpc_attachment ? local.app_nlb_azs[count.index] : ""
 }

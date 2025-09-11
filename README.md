@@ -1,16 +1,11 @@
 ## WorldSkills Korea 2025 National Day1 - Gyeonggi Project
 ---
 
-```
-# 1차 TAA
-terraform apply -auto-approve
 
-# 2차 TAA
-terraform apply -auto-approve -var="enable_nlb_cross_vpc_attachment=true"
-```
 
 ### 배포 전 유의사항
 - [ ] CloudWatch의 Log Group이 삭제되어 있는가?
+- [ ] rtb pcx는 taa 3번정도 하면 알아서 생김
 
 ### 배포 후 진행
 - [ ] Bastion에 접속하여 RDS Table 생성

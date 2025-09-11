@@ -331,41 +331,60 @@ resource "aws_vpc_peering_connection" "hub_app" {
   }
 }
 
+# Wait for peering propagation to fully complete before creating dependent routes
+resource "time_sleep" "wait_for_pcx_propagation" {
+  create_duration = "30s"
+
+  depends_on = [aws_vpc_peering_connection.hub_app]
+}
+
 
 resource "aws_route" "app_public_to_hub" {
   route_table_id            = aws_route_table.app_public.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_route" "app_private_a_to_hub" {
   route_table_id            = aws_route_table.app_private_a.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_route" "app_private_b_to_hub" {
   route_table_id            = aws_route_table.app_private_b.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_route" "app_private_c_to_hub" {
   route_table_id            = aws_route_table.app_private_c.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_route" "app_db_a_to_hub" {
   route_table_id            = aws_route_table.app_db_a.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_route" "app_db_c_to_hub" {
   route_table_id            = aws_route_table.app_db_c.id
   destination_cidr_block    = aws_vpc.hub.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.hub_app.id
+  
+  depends_on = [time_sleep.wait_for_pcx_propagation]
 }
 
 resource "aws_cloudwatch_log_group" "hub_flow_logs" {
