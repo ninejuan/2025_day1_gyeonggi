@@ -12,6 +12,7 @@ resource "aws_lb" "hub_nlb" {
   }
 }
 
+
 resource "aws_lb_target_group" "hub_nlb" {
   name        = "ws25-hub-nlb-tg"
   port        = 80
@@ -32,26 +33,6 @@ resource "aws_lb_target_group" "hub_nlb" {
   }
 }
 
-resource "aws_lb_target_group" "hub_to_app_nlb" {
-  name        = "ws25-hub-to-app-nlb-tg"
-  port        = 80
-  protocol    = "TCP"
-  vpc_id      = var.hub_vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    protocol            = "TCP"
-    interval            = 30
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-  }
-
-  tags = {
-    Name = "ws25-hub-to-app-nlb-tg"
-  }
-}
-
 resource "aws_lb_listener" "hub_nlb" {
   load_balancer_arn = aws_lb.hub_nlb.arn
   port              = 80
@@ -59,8 +40,7 @@ resource "aws_lb_listener" "hub_nlb" {
 
   default_action {
     type             = "forward"
-    # target_group_arn = aws_lb_target_group.hub_nlb.arn
-    target_group_arn = aws_lb_target_group.hub_to_app_nlb.arn
+    target_group_arn = aws_lb_target_group.hub_nlb.arn
   }
 }
 
@@ -346,21 +326,28 @@ resource "aws_lb_target_group_attachment" "alb_to_nlb" {
 }
 
 data "aws_network_interfaces" "app_nlb" {
+  count = var.enable_nlb_cross_vpc_attachment ? 1 : 0
+  
   filter {
     name   = "description"
     values = ["ELB ${aws_lb.app_nlb.arn_suffix}"]
   }
+  
+  depends_on = [aws_lb.app_nlb]
 }
 
 data "aws_network_interface" "app_nlb_ips" {
-  count = length(data.aws_network_interfaces.app_nlb.ids)
-  id    = data.aws_network_interfaces.app_nlb.ids[count.index]
+  count = var.enable_nlb_cross_vpc_attachment ? length(try(data.aws_network_interfaces.app_nlb[0].ids, [])) : 0
+  id    = var.enable_nlb_cross_vpc_attachment ? data.aws_network_interfaces.app_nlb[0].ids[count.index] : ""
+  
+  depends_on = [data.aws_network_interfaces.app_nlb]
 }
 
 resource "aws_lb_target_group_attachment" "hub_nlb_to_app_nlb" {
-  count            = length(data.aws_network_interfaces.app_nlb.ids)
-  target_group_arn = aws_lb_target_group.hub_to_app_nlb.arn
-  target_id        = data.aws_network_interface.app_nlb_ips[count.index].private_ip
-  port             = 80
+  count = var.enable_nlb_cross_vpc_attachment ? length(data.aws_network_interface.app_nlb_ips) : 0
+  
+  target_group_arn  = aws_lb_target_group.hub_nlb.arn
+  target_id         = data.aws_network_interface.app_nlb_ips[count.index].private_ip
+  port              = 80
   availability_zone = data.aws_network_interface.app_nlb_ips[count.index].availability_zone
 }

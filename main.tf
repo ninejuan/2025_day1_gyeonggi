@@ -83,6 +83,8 @@ module "load_balancers" {
   app_vpc_id             = module.vpc.app_vpc_id
   app_public_subnet_ids  = module.vpc.app_public_subnet_ids
   app_private_subnet_ids = module.vpc.app_private_subnet_ids
+  
+  enable_nlb_cross_vpc_attachment = var.enable_nlb_cross_vpc_attachment
 }
 
 module "monitoring" {
@@ -96,7 +98,8 @@ module "monitoring" {
 module "s3" {
   source = "./modules/s3"
   
-  contestant_number = var.contestant_number
+  contestant_number   = var.contestant_number
+  use_random_suffix   = var.use_random_suffix
 }
 
 module "codedeploy" {

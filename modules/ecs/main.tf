@@ -135,9 +135,19 @@ resource "aws_cloudwatch_log_group" "green" {
   retention_in_days = 7
 }
 
+resource "aws_cloudwatch_log_stream" "green_default" {
+  name           = "green-stream"
+  log_group_name = aws_cloudwatch_log_group.green.name
+}
+
 resource "aws_cloudwatch_log_group" "red" {
   name              = "/ws25/logs/red"
   retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_stream" "red_default" {
+  name           = "red-stream"
+  log_group_name = aws_cloudwatch_log_group.red.name
 }
 
 resource "aws_cloudwatch_log_group" "fluentbit" {
@@ -321,6 +331,7 @@ resource "aws_ecs_service" "green" {
   enable_execute_command    = true
   enable_ecs_managed_tags   = true
   propagate_tags           = "SERVICE"
+  availability_zone_rebalancing = "ENABLED"
 
   lifecycle {
     ignore_changes = [task_definition, desired_count, load_balancer]
@@ -358,6 +369,7 @@ resource "aws_ecs_service" "red" {
   enable_execute_command    = true
   enable_ecs_managed_tags   = true
   propagate_tags           = "SERVICE"
+  availability_zone_rebalancing = "ENABLED"
 
   lifecycle {
     ignore_changes = [task_definition, desired_count, load_balancer]

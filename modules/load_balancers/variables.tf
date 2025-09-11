@@ -22,3 +22,9 @@ variable "app_private_subnet_ids" {
   description = "App private subnet IDs"
   type        = list(string)
 }
+
+variable "enable_nlb_cross_vpc_attachment" {
+  description = "Enable NLB cross-VPC attachment (requires NLB to be created first)"
+  type        = bool
+  default     = false
+}
