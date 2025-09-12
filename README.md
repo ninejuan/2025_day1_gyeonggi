@@ -1,8 +1,6 @@
 ## WorldSkills Korea 2025 National Day1 - Gyeonggi Project
 ---
 
-
-
 ### 배포 전 유의사항
 - [ ] CloudWatch의 Log Group이 삭제되어 있는가?
 - [ ] rtb pcx는 taa 3번정도 하면 알아서 생김

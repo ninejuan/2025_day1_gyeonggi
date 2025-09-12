@@ -63,6 +63,58 @@ resource "aws_iam_role_policy" "codepipeline" {
   })
 }
 
+
+resource "aws_codepipeline" "green" {
+  name     = "ws25-cd-green-pipeline"
+  role_arn = aws_iam_role.codepipeline.arn
+
+  artifact_store {
+    location = var.green_s3_bucket
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "S3"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        S3Bucket    = var.green_s3_bucket
+        S3ObjectKey = "artifact.zip"
+        PollForSourceChanges = "false"
+      }
+    }
+  }
+
+  stage {
+    name = "Deploy"
+
+    action {
+      name            = "Deploy"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "CodeDeployToECS"
+      version         = "1"
+      input_artifacts = ["source_output"]
+
+      configuration = {
+        ApplicationName                = var.green_codedeploy_app
+        DeploymentGroupName            = var.green_deployment_group
+        TaskDefinitionTemplateArtifact = "source_output"
+        TaskDefinitionTemplatePath     = "taskdef.json"
+        AppSpecTemplateArtifact        = "source_output"
+        AppSpecTemplatePath            = "appspec.yml"
+      }
+    }
+  }
+}
+
 resource "aws_iam_role" "cloudwatch_pipeline" {
   name = "ws25-cloudwatch-pipeline-role"
 
@@ -98,56 +150,31 @@ resource "aws_iam_role_policy" "cloudwatch_pipeline" {
   })
 }
 
-resource "aws_codepipeline" "green" {
-  name     = "ws25-cd-green-pipeline"
-  role_arn = aws_iam_role.codepipeline.arn
+resource "aws_cloudwatch_event_rule" "green_pipeline" {
+  name        = "ws25-green-pipeline-trigger"
+  description = "Trigger green pipeline on S3 PutObject"
 
-  artifact_store {
-    location = var.green_s3_bucket
-    type     = "S3"
-  }
-
-  stage {
-    name = "Source"
-
-    action {
-      name             = "Source"
-      category         = "Source"
-      owner            = "AWS"
-      provider         = "S3"
-      version          = "1"
-      output_artifacts = ["source_output"]
-
-      configuration = {
-        S3Bucket    = var.green_s3_bucket
-        S3ObjectKey = "artifact.zip"
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      eventName = ["PutObject"]
+      bucket = {
+        name = [var.green_s3_bucket]
+      }
+      object = {
+        key = ["artifact.zip"]
       }
     }
-  }
-
-  stage {
-    name = "Deploy"
-
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "CodeDeployToECS"
-      version         = "1"
-      input_artifacts = ["source_output"]
-
-      configuration = {
-        ApplicationName                = var.green_codedeploy_app
-        DeploymentGroupName            = var.green_deployment_group
-        TaskDefinitionTemplateArtifact = "source_output"
-        TaskDefinitionTemplatePath     = "taskdef.json"
-        AppSpecTemplateArtifact        = "source_output"
-        AppSpecTemplatePath            = "appspec.yml"
-      }
-    }
-  }
+  })
 }
 
+resource "aws_cloudwatch_event_target" "green_pipeline" {
+  rule      = aws_cloudwatch_event_rule.green_pipeline.name
+  target_id = "CodePipeline"
+  arn       = aws_codepipeline.green.arn
+  role_arn  = aws_iam_role.cloudwatch_pipeline.arn
+}
 resource "aws_codepipeline" "red" {
   name     = "ws25-cd-red-pipeline"
   role_arn = aws_iam_role.codepipeline.arn
@@ -171,6 +198,7 @@ resource "aws_codepipeline" "red" {
       configuration = {
         S3Bucket    = var.red_s3_bucket
         S3ObjectKey = "artifact.zip"
+        PollForSourceChanges = "false"
       }
     }
   }
@@ -198,39 +226,15 @@ resource "aws_codepipeline" "red" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "green_pipeline" {
-  name        = "ws25-green-pipeline-trigger"
-  description = "Trigger green pipeline on S3 object upload"
-
-  event_pattern = jsonencode({
-    source      = ["aws.s3"]
-    detail-type = ["Object Created"]
-    detail = {
-      bucket = {
-        name = [var.green_s3_bucket]
-      }
-      object = {
-        key = ["artifact.zip"]
-      }
-    }
-  })
-}
-
-resource "aws_cloudwatch_event_target" "green_pipeline" {
-  rule      = aws_cloudwatch_event_rule.green_pipeline.name
-  target_id = "CodePipeline"
-  arn       = aws_codepipeline.green.arn
-  role_arn  = aws_iam_role.cloudwatch_pipeline.arn
-}
-
 resource "aws_cloudwatch_event_rule" "red_pipeline" {
   name        = "ws25-red-pipeline-trigger"
-  description = "Trigger red pipeline on S3 object upload"
+  description = "Trigger red pipeline on S3 PutObject"
 
   event_pattern = jsonencode({
     source      = ["aws.s3"]
     detail-type = ["Object Created"]
     detail = {
+      eventName = ["PutObject"]
       bucket = {
         name = [var.red_s3_bucket]
       }
