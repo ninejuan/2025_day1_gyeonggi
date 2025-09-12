@@ -32,7 +32,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         type   = "metric"
         x      = 0
         y      = 0
-        width  = 12
+        width  = 8
         height = 6
 
         properties = {
@@ -49,15 +49,15 @@ resource "aws_cloudwatch_dashboard" "main" {
       },
       {
         type   = "metric"
-        x      = 12
+        x      = 8
         y      = 0
-        width  = 12
+        width  = 8
         height = 6
 
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "TargetGroup", "ws25-alb-green-tg", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "GET /green" }],
-            [".", ".", ".", ".", ".", ".", { stat = "Sum", label = "POST /green" }]
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "GET /green" }],
+            ["AWS/ApplicationELB", "NewConnectionCount", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "POST /green" }]
           ]
           view    = "timeSeries"
           stacked = false
@@ -68,15 +68,15 @@ resource "aws_cloudwatch_dashboard" "main" {
       },
       {
         type   = "metric"
-        x      = 0
-        y      = 6
-        width  = 12
+        x      = 16
+        y      = 0
+        width  = 8
         height = 6
 
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "TargetGroup", "ws25-alb-red-tg", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "GET /red" }],
-            [".", ".", ".", ".", ".", ".", { stat = "Sum", label = "POST /red" }]
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "GET /red" }],
+            ["AWS/ApplicationELB", "NewConnectionCount", "LoadBalancer", var.alb_arn_suffix, { stat = "Sum", label = "POST /red" }]
           ]
           view    = "timeSeries"
           stacked = false
@@ -87,7 +87,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       },
       {
         type   = "metric"
-        x      = 12
+        x      = 0
         y      = 6
         width  = 12
         height = 6
@@ -106,20 +106,19 @@ resource "aws_cloudwatch_dashboard" "main" {
       },
       {
         type   = "metric"
-        x      = 0
-        y      = 12
+        x      = 12
+        y      = 6
         width  = 12
         height = 6
 
         properties = {
           metrics = [
-            ["AWS/ECS/ContainerInsights", "CpuUtilized", "ServiceName", "ws25-ecs-green", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }],
-            [".", ".", "ServiceName", "ws25-ecs-red", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }]
+            [{ "expression" = "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/ECS\", ClusterName, ServiceName) GROUP BY ClusterName, ServiceName ORDER BY AVG() DESC LIMIT 10" }]
           ]
           view    = "timeSeries"
           stacked = false
           region  = "ap-northeast-2"
-          title   = "Top 작업 per CPU 사용률"
+          title   = "Top 서비스 per CPU 사용률"
           period  = 60
         }
       },
@@ -132,15 +131,29 @@ resource "aws_cloudwatch_dashboard" "main" {
 
         properties = {
           metrics = [
-            ["AWS/ECS/ContainerInsights", "CpuUtilized", "ContainerName", "green", "ServiceName", "ws25-ecs-green", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }],
-            [".", ".", "ContainerName", "red", "ServiceName", "ws25-ecs-red", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }],
-            [".", ".", "ContainerName", "log_router", "ServiceName", "ws25-ecs-green", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }],
-            [".", ".", "ContainerName", "log_router", "ServiceName", "ws25-ecs-red", "ClusterName", "ws25-ecs-cluster", { stat = "Average" }]
+            [{ "expression" = "SELECT MAX(ContainerCpuUtilization) FROM SCHEMA(\"ECS/ContainerInsights\", ClusterName, TaskDefinitionFamily, TaskId, ContainerName) GROUP BY ClusterName, TaskDefinitionFamily, TaskId, ContainerName ORDER BY MAX() DESC LIMIT 10" }]
           ]
           view    = "timeSeries"
           stacked = false
           region  = "ap-northeast-2"
           title   = "Top 컨테이너 per CPU 사용률"
+          period  = 60
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 12
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            [{ "expression" = "SELECT MAX(TaskCpuUtilization) FROM SCHEMA(\"ECS/ContainerInsights\", ClusterName, TaskDefinitionFamily, TaskId) GROUP BY ClusterName, TaskDefinitionFamily, TaskId ORDER BY MAX() DESC LIMIT 10" }]
+          ]
+          region  = "ap-northeast-2"
+          title   = "Top 작업 per CPU 사용률"
+          view    = "timeSeries"
           period  = 60
         }
       }
