@@ -1,4 +1,3 @@
-# CloudWatch metric filters for VPC Flow Logs
 resource "aws_cloudwatch_log_metric_filter" "hub_vpc_accept" {
   name           = "ws25-hub-vpc-accept"
   log_group_name = "/ws25/flow/hub"
