@@ -158,7 +158,6 @@ resource "aws_cloudwatch_event_rule" "green_pipeline" {
     source      = ["aws.s3"]
     detail-type = ["Object Created"]
     detail = {
-      eventName = ["PutObject"]
       bucket = {
         name = [var.green_s3_bucket]
       }
@@ -234,7 +233,6 @@ resource "aws_cloudwatch_event_rule" "red_pipeline" {
     source      = ["aws.s3"]
     detail-type = ["Object Created"]
     detail = {
-      eventName = ["PutObject"]
       bucket = {
         name = [var.red_s3_bucket]
       }

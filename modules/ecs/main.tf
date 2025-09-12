@@ -334,7 +334,7 @@ resource "aws_ecs_service" "green" {
   availability_zone_rebalancing = "ENABLED"
 
   lifecycle {
-    ignore_changes = [task_definition, desired_count, load_balancer]
+    ignore_changes = [task_definition, desired_count]
   }
 
   network_configuration {
@@ -372,7 +372,7 @@ resource "aws_ecs_service" "red" {
   availability_zone_rebalancing = "ENABLED"
 
   lifecycle {
-    ignore_changes = [task_definition, desired_count, load_balancer]
+    ignore_changes = [task_definition, desired_count]
   }
 
   network_configuration {
