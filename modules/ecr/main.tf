@@ -131,6 +131,8 @@ resource "null_resource" "build_and_push_green" {
 
   provisioner "local-exec" {
     command = <<-EOF
+      set -euo pipefail
+
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
       
       BUILD_ARCH=$(uname -m)
@@ -152,11 +154,12 @@ resource "null_resource" "build_and_push_green" {
       
       echo "Target platform: $BUILD_PLATFORM"
       
-      cd ${path.module}/../../app-files/docker/green/1.0.0
+      ROOT_DIR="${abspath(path.root)}"
+      cd "$ROOT_DIR/app-files/docker/green/1.0.0"
       $BUILD_CMD -t ${aws_ecr_repository.green.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.0
       
-      cd ${path.module}/../../app-files/docker/green/1.0.1
+      cd "$ROOT_DIR/app-files/docker/green/1.0.1"
       $BUILD_CMD -t ${aws_ecr_repository.green.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.1
       
@@ -180,6 +183,8 @@ resource "null_resource" "build_and_push_red" {
 
   provisioner "local-exec" {
     command = <<-EOF
+      set -euo pipefail
+
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
       
       BUILD_ARCH=$(uname -m)
@@ -201,11 +206,12 @@ resource "null_resource" "build_and_push_red" {
       
       echo "Target platform: $BUILD_PLATFORM"
       
-      cd ${path.module}/../../app-files/docker/red/1.0.0
+      ROOT_DIR="${abspath(path.root)}"
+      cd "$ROOT_DIR/app-files/docker/red/1.0.0"
       $BUILD_CMD -t ${aws_ecr_repository.red.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.0
       
-      cd ${path.module}/../../app-files/docker/red/1.0.1
+      cd "$ROOT_DIR/app-files/docker/red/1.0.1"
       $BUILD_CMD -t ${aws_ecr_repository.red.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.1
       

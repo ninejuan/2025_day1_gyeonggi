@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_log_metric_filter" "hub_vpc_accept" {
   name           = "ws25-hub-vpc-accept"
-  log_group_name = "/ws25/flow/hub"
+  log_group_name = var.hub_flow_log_group_name
   pattern        = "[version, account, eni, source, destination, srcport, destport, protocol, packets, bytes, windowstart, windowend, action=\"ACCEPT\", flowlogstatus]"
 
   metric_transformation {
@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_metric_filter" "hub_vpc_accept" {
 
 resource "aws_cloudwatch_log_metric_filter" "app_vpc_accept" {
   name           = "ws25-app-vpc-accept"
-  log_group_name = "/ws25/flow/app"
+  log_group_name = var.app_flow_log_group_name
   pattern        = "[version, account, eni, source, destination, srcport, destport, protocol, packets, bytes, windowstart, windowend, action=\"ACCEPT\", flowlogstatus]"
 
   metric_transformation {

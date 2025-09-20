@@ -47,3 +47,11 @@ output "app_private_route_table_ids" {
 output "vpc_endpoint_security_group_id" {
   value = aws_security_group.vpc_endpoints.id
 }
+
+output "hub_flow_log_group_name" {
+  value = aws_cloudwatch_log_group.hub_flow_logs.name
+}
+
+output "app_flow_log_group_name" {
+  value = aws_cloudwatch_log_group.app_flow_logs.name
+}

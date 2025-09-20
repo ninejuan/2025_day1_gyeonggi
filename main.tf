@@ -93,6 +93,8 @@ module "monitoring" {
   alb_arn_suffix = module.load_balancers.alb_arn_suffix
   hub_vpc_id     = module.vpc.hub_vpc_id
   app_vpc_id     = module.vpc.app_vpc_id
+  hub_flow_log_group_name = module.vpc.hub_flow_log_group_name
+  app_flow_log_group_name = module.vpc.app_flow_log_group_name
 }
 
 module "s3" {
