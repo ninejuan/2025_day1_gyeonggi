@@ -134,42 +134,20 @@ resource "null_resource" "build_and_push_green" {
       set -euo pipefail
 
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
-      
-      BUILD_ARCH=$(uname -m)
-      if [ "$BUILD_ARCH" = "arm64" ] || [ "$BUILD_ARCH" = "aarch64" ]; then
-        echo "Building on ARM64 platform (M3 Pro MacBook)"
-        BUILD_PLATFORM="linux/amd64"
-        if docker buildx version >/dev/null 2>&1; then
-          docker buildx create --name multiarch --use --driver docker-container 2>/dev/null || docker buildx use multiarch 2>/dev/null || true
-          BUILD_CMD="docker buildx build --platform $BUILD_PLATFORM --load"
-        else
-          echo "Buildx not available, using regular docker build"
-          BUILD_CMD="docker build"
-        fi
-      else
-        echo "Building on x86_64 platform (t3.micro)"
-        BUILD_PLATFORM="linux/amd64"
-        BUILD_CMD="DOCKER_BUILDKIT=0 docker build"
-      fi
-      
-      echo "Target platform: $BUILD_PLATFORM"
-      
+
       ROOT_DIR="${abspath(path.root)}"
       cd "$ROOT_DIR/app-files/docker/green/1.0.0"
-      $BUILD_CMD -t ${aws_ecr_repository.green.repository_url}:v1.0.0 .
+      docker build -t ${aws_ecr_repository.green.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.0
-      
+
       cd "$ROOT_DIR/app-files/docker/green/1.0.1"
-      $BUILD_CMD -t ${aws_ecr_repository.green.repository_url}:v1.0.1 .
+      docker build -t ${aws_ecr_repository.green.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.green.repository_url}:v1.0.1
-      
-      echo "Green images pushed successfully for platform: $BUILD_PLATFORM"
-      
+
+      echo "Green images pushed successfully"
+
       echo "Waiting for image scan to complete..."
       sleep 30
-      
-      echo "Checking scan results for Green v1.0.1:"
-      aws ecr describe-image-scan-findings --repository-name green --image-id imageTag=v1.0.1 --query "imageScanFindings.findingSeverityCounts" --output json || echo "Scan may still be in progress"
     EOF
   }
 
@@ -186,45 +164,23 @@ resource "null_resource" "build_and_push_red" {
       set -euo pipefail
 
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
-      
-      BUILD_ARCH=$(uname -m)
-      if [ "$BUILD_ARCH" = "arm64" ] || [ "$BUILD_ARCH" = "aarch64" ]; then
-        echo "Building on ARM64 platform (M3 Pro MacBook)"
-        BUILD_PLATFORM="linux/amd64"
-        if docker buildx version >/dev/null 2>&1; then
-          docker buildx create --name multiarch --use --driver docker-container 2>/dev/null || docker buildx use multiarch 2>/dev/null || true
-          BUILD_CMD="docker buildx build --platform $BUILD_PLATFORM --load"
-        else
-          echo "Buildx not available, using regular docker build"
-          BUILD_CMD="docker build"
-        fi
-      else
-        echo "Building on x86_64 platform (t3.micro)"
-        BUILD_PLATFORM="linux/amd64"
-        BUILD_CMD="DOCKER_BUILDKIT=0 docker build"
-      fi
-      
-      echo "Target platform: $BUILD_PLATFORM"
-      
+
       ROOT_DIR="${abspath(path.root)}"
       cd "$ROOT_DIR/app-files/docker/red/1.0.0"
-      $BUILD_CMD -t ${aws_ecr_repository.red.repository_url}:v1.0.0 .
+      docker build -t ${aws_ecr_repository.red.repository_url}:v1.0.0 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.0
-      
+
       cd "$ROOT_DIR/app-files/docker/red/1.0.1"
-      $BUILD_CMD -t ${aws_ecr_repository.red.repository_url}:v1.0.1 .
+      docker build -t ${aws_ecr_repository.red.repository_url}:v1.0.1 .
       docker push ${aws_ecr_repository.red.repository_url}:v1.0.1
-      
-      echo "Red images pushed successfully for platform: $BUILD_PLATFORM"
-      
+
+      echo "Red images pushed successfully"
+
       echo "Waiting for image scan to complete..."
       sleep 30
-      
+
       echo "Checking scan results for Red v1.0.1:"
       aws ecr describe-image-scan-findings --repository-name red --image-id imageTag=v1.0.1 --query "imageScanFindings.findingSeverityCounts" --output json || echo "Scan may still be in progress"
-      
-      echo "You can check scan results anytime with:"
-      echo "aws ecr describe-image-scan-findings --repository-name red --image-id imageTag=v1.0.1 --query \"imageScanFindings.findingSeverityCounts\" --output json"
     EOF
   }
 
@@ -238,32 +194,15 @@ resource "null_resource" "build_and_push_fluentbit" {
 
   provisioner "local-exec" {
     command = <<-EOF
+      set -euo pipefail
+
       aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
-      
-      BUILD_ARCH=$(uname -m)
-      if [ "$BUILD_ARCH" = "arm64" ] || [ "$BUILD_ARCH" = "aarch64" ]; then
-        echo "Building on ARM64 platform (M3 Pro MacBook)"
-        BUILD_PLATFORM="linux/amd64"
-        if docker buildx version >/dev/null 2>&1; then
-          docker buildx create --name multiarch --use --driver docker-container 2>/dev/null || docker buildx use multiarch 2>/dev/null || true
-          BUILD_CMD="docker buildx build --platform $BUILD_PLATFORM --load"
-        else
-          echo "Buildx not available, using regular docker build"
-          BUILD_CMD="docker build"
-        fi
-      else
-        echo "Building on x86_64 platform (t3.micro)"
-        BUILD_PLATFORM="linux/amd64"
-        BUILD_CMD="DOCKER_BUILDKIT=0 docker build"
-      fi
-      
-      echo "Target platform: $BUILD_PLATFORM"
-      
-      docker pull --platform $BUILD_PLATFORM public.ecr.aws/aws-observability/aws-for-fluent-bit:stable
+
+      docker pull public.ecr.aws/aws-observability/aws-for-fluent-bit:stable
       docker tag public.ecr.aws/aws-observability/aws-for-fluent-bit:stable ${aws_ecr_repository.fluentbit.repository_url}:latest
       docker push ${aws_ecr_repository.fluentbit.repository_url}:latest
-      
-      echo "FluentBit image pushed successfully for platform: $BUILD_PLATFORM"
+
+      echo "FluentBit image pushed successfully"
     EOF
   }
 
