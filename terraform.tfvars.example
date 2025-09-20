@@ -1,0 +1,7 @@
+account_number = ""
+contestant_number = ""
+
+# S3 버킷 이름에 random suffix 추가 여부 (기본값: true)
+# true: ws25-cd-green-artifact-129-56958788
+# false: ws25-cd-green-artifact-120
+use_random_suffix = true

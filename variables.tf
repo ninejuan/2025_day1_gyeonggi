@@ -29,7 +29,7 @@ variable "contestant_number" {
 variable "use_random_suffix" {
   description = "S3 버킷 이름에 random suffix를 추가할지 여부"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_nlb_cross_vpc_attachment" {
